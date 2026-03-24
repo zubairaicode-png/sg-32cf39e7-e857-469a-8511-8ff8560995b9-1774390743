@@ -135,9 +135,9 @@ export const customerService = {
       city: data.city,
       postalCode: data.postal_code || "",
       country: data.country || "Saudi Arabia",
-      creditLimit: parseFloat(data.credit_limit || "0"),
+      creditLimit: Number(data.credit_limit) || 0,
       paymentTerms: data.payment_term || "net30",
-      balance: parseFloat(data.current_balance || "0"),
+      balance: Number(data.current_balance) || 0,
       isActive: data.is_active ?? true,
       createdAt: data.created_at,
     };
