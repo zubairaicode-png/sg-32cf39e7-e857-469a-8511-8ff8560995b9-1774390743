@@ -39,18 +39,62 @@ export default function NewCustomerPage() {
     isActive: true,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    alert("Save button was clicked! Check console now.");
-    
-    console.log("=== FORM SUBMIT STARTED ===");
-    console.log("Form event:", e);
+  // Direct test function that bypasses form submission
+  const testDatabaseConnection = async () => {
+    console.log("=== DIRECT DATABASE TEST ===");
     console.log("Current user:", user);
     
     if (!user) {
-      console.error("ERROR: No user found!");
-      alert("ERROR: Not logged in!");
+      alert("❌ ERROR: Not logged in! User object is null.");
+      return;
+    }
+
+    alert("✅ User authenticated: " + user.username);
+
+    try {
+      const testData = {
+        code: "TEST-" + Date.now(),
+        nameEnglish: "Test Customer",
+        nameArabic: "عميل تجريبي",
+        city: "Riyadh",
+        country: "SA",
+        creditLimit: 0,
+        paymentTerms: "net30" as const,
+        isActive: true,
+      };
+
+      console.log("Calling customerService.create with test data:", testData);
+      alert("⏳ Sending to database...");
+
+      const result = await customerService.create(testData);
+
+      console.log("✅ SUCCESS! Customer created:", result);
+      alert("✅ SUCCESS! Customer created with code: " + result.code);
+
+      toast({
+        title: "Success!",
+        description: "Test customer created successfully",
+      });
+
+      router.push("/customers");
+    } catch (error) {
+      console.error("❌ ERROR:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert("❌ ERROR: " + errorMessage);
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submitted!");
+    
+    if (!user) {
       toast({
         title: "Authentication Error",
         description: "You must be logged in to create customers.",
@@ -59,14 +103,9 @@ export default function NewCustomerPage() {
       return;
     }
 
-    console.log("User is authenticated, proceeding with save...");
-    alert("User authenticated: " + user.username);
     setIsLoading(true);
 
     try {
-      console.log("=== CREATING CUSTOMER ===");
-      console.log("Form data:", formData);
-      
       const customerData = {
         code: formData.customerCode,
         nameEnglish: formData.nameEnglish,
@@ -85,38 +124,23 @@ export default function NewCustomerPage() {
         paymentTerms: formData.paymentTerms,
         isActive: formData.isActive,
       };
-      
-      console.log("Calling customerService.create with:", customerData);
-      alert("About to call database...");
 
       const result = await customerService.create(customerData);
-      
-      console.log("Customer created successfully! Result:", result);
-      alert("Success! Customer created: " + result.code);
 
       toast({
         title: "Customer Created",
         description: `${formData.nameEnglish} has been successfully added.`,
       });
-      
-      console.log("Redirecting to /customers...");
+
       router.push("/customers");
     } catch (error) {
-      console.error("=== ERROR CREATING CUSTOMER ===");
-      console.error("Error object:", error);
-      console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
-      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
-      
-      alert("ERROR: " + (error instanceof Error ? error.message : "Unknown error"));
-      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create customer. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create customer",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
-      console.log("=== FORM SUBMIT COMPLETED ===");
     }
   };
 
@@ -136,10 +160,19 @@ export default function NewCustomerPage() {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold text-foreground">Add New Customer</h1>
               <p className="text-muted-foreground mt-1">Register a new customer in the system</p>
             </div>
+            {/* TEST BUTTON - Remove after testing */}
+            <Button 
+              type="button" 
+              onClick={testDatabaseConnection}
+              variant="outline"
+              className="bg-yellow-100 hover:bg-yellow-200 border-yellow-400"
+            >
+              🧪 Test Database
+            </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -207,7 +240,7 @@ export default function NewCustomerPage() {
               </CardContent>
             </Card>
 
-            {/* Address Information (Saudi Arabia Format) */}
+            {/* Address Information */}
             <Card>
               <CardHeader>
                 <CardTitle>Address Information</CardTitle>
