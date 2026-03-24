@@ -72,7 +72,7 @@ export const customerService = {
       postal_code: customer.postalCode || null,
       country: customer.country || "Saudi Arabia",
       credit_limit: customer.creditLimit ?? 0,
-      payment_term: customer.paymentTerms || "net30",
+      payment_term: (customer.paymentTerms || "net30") as "cash" | "net15" | "net30" | "net60" | "net90",
       is_active: customer.isActive ?? true,
       opening_balance: 0,
       current_balance: 0,
