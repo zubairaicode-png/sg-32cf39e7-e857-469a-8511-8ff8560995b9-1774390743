@@ -74,6 +74,7 @@ export const customerService = {
   },
 
   async create(customer: Omit<Customer, "id" | "createdAt" | "balance">): Promise<Customer> {
+    // Get the auth user
     const {
       data: { user: authUser },
     } = await supabase.auth.getUser();
@@ -82,9 +83,35 @@ export const customerService = {
       throw new Error("User not authenticated. Please log in again.");
     }
 
-    // Verify this auth user has a matching record in the users table
-    // to satisfy the FK constraint on customers.created_by
+    // Check if this auth user has a matching record in the users table
+    // The customers.created_by FK references the users table, not auth.users
     const { data: dbUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", authUser.id)
+      .maybeSingle();
+
+    // If no matching users row exists, insert the user first
+    if (!dbUser) {
+      console.warn("No users table record found for auth user. Attempting to create one.");
+      const { error: userInsertError } = await supabase.from("users").insert({
+        id: authUser.id,
+        username: authUser.email?.split("@")[0] || "user",
+        email: authUser.email || "",
+        full_name: authUser.user_metadata?.full_name || authUser.email || "User",
+        role: "admin",
+        permissions: [],
+        is_active: true,
+      });
+
+      if (userInsertError) {
+        console.error("Failed to create users record:", userInsertError);
+        // Continue without created_by to avoid blocking customer creation
+      }
+    }
+
+    // Re-check after potential insert
+    const { data: resolvedUser } = await supabase
       .from("users")
       .select("id")
       .eq("id", authUser.id)
@@ -107,11 +134,11 @@ export const customerService = {
       credit_limit: customer.creditLimit ?? 0,
       payment_term: customer.paymentTerms as "cash" | "net15" | "net30" | "net60" | "net90",
       is_active: customer.isActive ?? true,
-      // Only set created_by if user exists in the users table (avoids FK violation)
-      created_by: dbUser ? authUser.id : null,
+      // Only include created_by if we confirmed the user exists in the users table
+      created_by: resolvedUser ? authUser.id : null,
     };
 
-    console.log("Inserting customer:", insertData);
+    console.log("Inserting customer data:", insertData);
 
     const { data, error } = await supabase
       .from("customers")
