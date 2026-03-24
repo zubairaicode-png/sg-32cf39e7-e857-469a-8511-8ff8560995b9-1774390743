@@ -70,9 +70,10 @@ export default function NewJournalEntryPage() {
     newLines[index] = { ...newLines[index], [field]: value };
     
     // Ensure only debit OR credit is filled
-    if (field === "debit" && value > 0) {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (field === "debit" && numValue > 0) {
       newLines[index].credit = 0;
-    } else if (field === "credit" && value > 0) {
+    } else if (field === "credit" && numValue > 0) {
       newLines[index].debit = 0;
     }
     

@@ -10,27 +10,20 @@ export interface User {
   lastLogin?: string;
 }
 
-export enum UserRole {
-  ADMIN = "admin",
-  ACCOUNTANT = "accountant",
-  SALES_MANAGER = "sales_manager",
-  PURCHASE_MANAGER = "purchase_manager",
-  VIEWER = "viewer",
-}
+export type UserRole = "admin" | "accountant" | "sales" | "purchase" | "viewer";
 
-export enum Permission {
-  MANAGE_USERS = "manage_users",
-  VIEW_CUSTOMERS = "view_customers",
-  MANAGE_CUSTOMERS = "manage_customers",
-  VIEW_SUPPLIERS = "view_suppliers",
-  MANAGE_SUPPLIERS = "manage_suppliers",
-  CREATE_SALES_INVOICE = "create_sales_invoice",
-  VIEW_SALES = "view_sales",
-  CREATE_PURCHASE_INVOICE = "create_purchase_invoice",
-  VIEW_PURCHASES = "view_purchases",
-  MANAGE_ACCOUNTING = "manage_accounting",
-  VIEW_REPORTS = "view_reports",
-}
+export type Permission = 
+  | "manage_users"
+  | "view_customers"
+  | "manage_customers"
+  | "view_suppliers"
+  | "manage_suppliers"
+  | "create_sales_invoice"
+  | "view_sales"
+  | "create_purchase_invoice"
+  | "view_purchases"
+  | "manage_accounting"
+  | "view_reports";
 
 export interface Customer {
   id: string;
