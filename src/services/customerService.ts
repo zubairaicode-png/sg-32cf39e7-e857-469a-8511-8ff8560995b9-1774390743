@@ -74,26 +74,35 @@ export const customerService = {
   },
 
   async create(customer: Omit<Customer, "id" | "createdAt" | "balance">): Promise<Customer> {
+    // Get current user session
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
     const insertData = {
       customer_code: customer.code,
       name_arabic: customer.nameArabic,
       name_english: customer.nameEnglish,
-      vat_number: customer.vatNumber,
-      commercial_registration: customer.commercialRegister,
-      email: customer.email,
-      phone: customer.phone,
-      building_number: customer.buildingNumber,
-      street_name: customer.streetName,
-      district: customer.district,
+      vat_number: customer.vatNumber || null,
+      commercial_registration: customer.commercialRegister || null,
+      email: customer.email || null,
+      phone: customer.phone || null,
+      building_number: customer.buildingNumber || null,
+      street_name: customer.streetName || null,
+      district: customer.district || null,
       city: customer.city,
-      postal_code: customer.postalCode,
-      country: customer.country,
-      credit_limit: customer.creditLimit,
+      postal_code: customer.postalCode || null,
+      country: customer.country || "Saudi Arabia",
+      credit_limit: customer.creditLimit || 0,
       payment_term: customer.paymentTerms as "cash" | "net15" | "net30" | "net60" | "net90",
-      is_active: customer.isActive,
+      is_active: customer.isActive ?? true,
+      created_by: user.id,
     };
 
     console.log("=== CUSTOMER SERVICE DEBUG ===");
+    console.log("Current user ID:", user.id);
     console.log("Attempting to insert customer into Supabase:", insertData);
 
     const { data, error } = await supabase
@@ -106,7 +115,7 @@ export const customerService = {
 
     if (error) {
       console.error("Supabase Error creating customer:", error);
-      throw error;
+      throw new Error(error.message || "Failed to create customer");
     }
 
     console.log("Customer created successfully:", data);
@@ -114,23 +123,23 @@ export const customerService = {
     return {
       id: data.id,
       code: data.customer_code,
-      nameArabic: data.name_arabic,
       nameEnglish: data.name_english,
-      vatNumber: data.vat_number || undefined,
-      commercialRegister: data.commercial_registration || undefined,
-      email: data.email || undefined,
-      phone: data.phone || undefined,
+      nameArabic: data.name_arabic || "",
+      vatNumber: data.vat_number,
+      commercialRegister: data.commercial_registration,
+      email: data.email,
+      phone: data.phone,
       buildingNumber: data.building_number || "",
       streetName: data.street_name || "",
       district: data.district || "",
-      city: data.city || "",
+      city: data.city,
       postalCode: data.postal_code || "",
-      country: data.country || "",
-      creditLimit: data.credit_limit || 0,
-      paymentTerms: data.payment_term || "",
-      balance: data.current_balance || 0,
-      isActive: data.is_active || true,
-      createdAt: data.created_at || new Date().toISOString(),
+      country: data.country || "Saudi Arabia",
+      creditLimit: parseFloat(data.credit_limit || "0"),
+      paymentTerms: data.payment_term || "net30",
+      balance: parseFloat(data.current_balance || "0"),
+      isActive: data.is_active ?? true,
+      createdAt: data.created_at,
     };
   },
 

@@ -11,10 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { customerService } from "@/services/customerService";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function NewCustomerPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     customerCode: "",
@@ -33,15 +35,29 @@ export default function NewCustomerPage() {
     phone: "",
     contactPerson: "",
     creditLimit: "",
-    paymentTerms: "net30",
+    paymentTerms: "net30" as "cash" | "net15" | "net30" | "net60" | "net90",
     isActive: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create customers.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      console.log("=== CREATING CUSTOMER ===");
+      console.log("Form data:", formData);
+      console.log("Current user:", user);
+
       await customerService.create({
         code: formData.customerCode,
         nameEnglish: formData.nameEnglish,
@@ -61,6 +77,8 @@ export default function NewCustomerPage() {
         isActive: formData.isActive,
       });
 
+      console.log("Customer created successfully!");
+
       toast({
         title: "Customer Created",
         description: `${formData.nameEnglish} has been successfully added.`,
@@ -70,7 +88,7 @@ export default function NewCustomerPage() {
       console.error("Error creating customer:", error);
       toast({
         title: "Error",
-        description: "Failed to create customer. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create customer. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -312,15 +330,20 @@ export default function NewCustomerPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="paymentTerms">Payment Terms (Days) *</Label>
-                    <Input
+                    <Label htmlFor="paymentTerms">Payment Terms *</Label>
+                    <select
                       id="paymentTerms"
-                      type="number"
-                      placeholder="30"
                       value={formData.paymentTerms}
                       onChange={(e) => handleChange("paymentTerms", e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       required
-                    />
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="net15">Net 15 Days</option>
+                      <option value="net30">Net 30 Days</option>
+                      <option value="net60">Net 60 Days</option>
+                      <option value="net90">Net 90 Days</option>
+                    </select>
                   </div>
                 </div>
 
