@@ -34,7 +34,6 @@ export interface Customer {
   commercialRegister?: string;
   email?: string;
   phone?: string;
-  mobile?: string;
   buildingNumber: string;
   streetName: string;
   district: string;
@@ -42,7 +41,7 @@ export interface Customer {
   postalCode: string;
   country: string;
   creditLimit: number;
-  paymentTerms: string;
+  paymentTerms: "cash" | "net15" | "net30" | "net60" | "net90" | string;
   balance: number;
   isActive: boolean;
   createdAt: string;
@@ -57,15 +56,13 @@ export interface Supplier {
   commercialRegister?: string;
   email?: string;
   phone?: string;
-  mobile?: string;
   buildingNumber: string;
   streetName: string;
   district: string;
   city: string;
   postalCode: string;
   country: string;
-  creditLimit: number;
-  paymentTerms: string;
+  paymentTerms: "cash" | "net15" | "net30" | "net60" | "net90" | string;
   balance: number;
   isActive: boolean;
   createdAt: string;
@@ -117,11 +114,11 @@ export interface InvoiceItem {
   unitPrice: number;
   vatRate: number;
   vatAmount: number;
-  total: number;
+  totalAmount: number;
 }
 
-export interface SalesInvoiceItem extends InvoiceItem {}
-export interface PurchaseInvoiceItem extends InvoiceItem {}
+export type SalesInvoiceItem = InvoiceItem;
+export type PurchaseInvoiceItem = InvoiceItem;
 
 export interface SalesInvoice {
   id: string;
@@ -136,7 +133,6 @@ export interface SalesInvoice {
   vatAmount: number;
   totalAmount: number;
   status: "draft" | "issued" | "paid" | "cancelled";
-  zatcaStatus?: "not_submitted" | "submitted" | "approved" | "rejected";
   zatcaUUID?: string;
   zatcaHash?: string;
   qrCode?: string;
@@ -156,7 +152,7 @@ export interface PurchaseInvoice {
   subtotal: number;
   vatAmount: number;
   totalAmount: number;
-  status: "draft" | "received" | "paid" | "cancelled";
+  status: "draft" | "issued" | "paid" | "cancelled";
   notes?: string;
   createdBy: string;
   createdAt: string;

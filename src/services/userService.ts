@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@/types";
-import { crypto } from "crypto";
 
 export const userService = {
   async getAll(): Promise<User[]> {
@@ -19,8 +18,8 @@ export const userService = {
       fullName: user.full_name,
       role: user.role as User["role"],
       permissions: user.permissions as User["permissions"],
-      isActive: user.is_active,
-      createdAt: user.created_at,
+      isActive: user.is_active || true,
+      createdAt: user.created_at || new Date().toISOString(),
       lastLogin: user.last_login || undefined,
     }));
   },
@@ -42,15 +41,14 @@ export const userService = {
       fullName: data.full_name,
       role: data.role as User["role"],
       permissions: data.permissions as User["permissions"],
-      isActive: data.is_active,
-      createdAt: data.created_at,
+      isActive: data.is_active || true,
+      createdAt: data.created_at || new Date().toISOString(),
       lastLogin: data.last_login || undefined,
     };
   },
 
   async create(user: Omit<User, "id" | "createdAt">): Promise<User> {
-    // Generate UUID if we need it for users table not handled by auth
-    const tempId = crypto.randomUUID();
+    const tempId = globalThis.crypto.randomUUID();
     
     const { data, error } = await supabase
       .from("users")
@@ -59,8 +57,8 @@ export const userService = {
         username: user.username,
         email: user.email,
         full_name: user.fullName,
-        role: user.role,
-        permissions: user.permissions,
+        role: user.role as any,
+        permissions: user.permissions as any,
         is_active: user.isActive,
       })
       .select()
@@ -75,8 +73,8 @@ export const userService = {
       fullName: data.full_name,
       role: data.role as User["role"],
       permissions: data.permissions as User["permissions"],
-      isActive: data.is_active,
-      createdAt: data.created_at,
+      isActive: data.is_active || true,
+      createdAt: data.created_at || new Date().toISOString(),
       lastLogin: data.last_login || undefined,
     };
   },
@@ -106,8 +104,8 @@ export const userService = {
       fullName: data.full_name,
       role: data.role as User["role"],
       permissions: data.permissions as User["permissions"],
-      isActive: data.is_active,
-      createdAt: data.created_at,
+      isActive: data.is_active || true,
+      createdAt: data.created_at || new Date().toISOString(),
       lastLogin: data.last_login || undefined,
     };
   },

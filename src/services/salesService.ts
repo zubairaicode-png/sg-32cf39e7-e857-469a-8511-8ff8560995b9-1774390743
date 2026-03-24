@@ -12,7 +12,6 @@ export const salesService = {
       `)
       .order("created_at", { ascending: false });
 
-    console.log("Sales invoices query:", { data, error });
     if (error) throw error;
 
     return (data || []).map(invoice => ({
@@ -27,7 +26,6 @@ export const salesService = {
       vatAmount: invoice.vat_amount || 0,
       totalAmount: invoice.total_amount,
       status: invoice.status as SalesInvoice["status"],
-      zatcaStatus: invoice.zatca_status as SalesInvoice["zatcaStatus"],
       zatcaUUID: invoice.zatca_uuid || undefined,
       zatcaHash: invoice.zatca_hash || undefined,
       qrCode: invoice.qr_code || undefined,
@@ -36,13 +34,12 @@ export const salesService = {
       createdAt: invoice.created_at || new Date().toISOString(),
       items: Array.isArray(invoice.items) ? invoice.items.map((item: any) => ({
         id: item.id,
-        itemName: item.item_name,
-        description: item.description || undefined,
+        itemName: item.item_description,
         quantity: item.quantity,
         unitPrice: item.unit_price,
-        vatRate: item.vat_rate,
+        vatRate: item.vat_rate || 15,
         vatAmount: item.vat_amount || 0,
-        total: item.total_amount,
+        totalAmount: item.total,
       })) : [],
     }));
   },
@@ -73,7 +70,6 @@ export const salesService = {
       vatAmount: data.vat_amount || 0,
       totalAmount: data.total_amount,
       status: data.status as SalesInvoice["status"],
-      zatcaStatus: data.zatca_status as SalesInvoice["zatcaStatus"],
       zatcaUUID: data.zatca_uuid || undefined,
       zatcaHash: data.zatca_hash || undefined,
       qrCode: data.qr_code || undefined,
@@ -82,19 +78,17 @@ export const salesService = {
       createdAt: data.created_at || new Date().toISOString(),
       items: Array.isArray(data.items) ? data.items.map((item: any) => ({
         id: item.id,
-        itemName: item.item_name,
-        description: item.description || undefined,
+        itemName: item.item_description,
         quantity: item.quantity,
         unitPrice: item.unit_price,
-        vatRate: item.vat_rate,
+        vatRate: item.vat_rate || 15,
         vatAmount: item.vat_amount || 0,
-        total: item.total_amount,
+        totalAmount: item.total,
       })) : [],
     };
   },
 
   async create(invoice: Omit<SalesInvoice, "id" | "createdAt">, items: Omit<SalesInvoiceItem, "id">[]): Promise<SalesInvoice> {
-    // Insert invoice
     const { data: invoiceData, error: invoiceError } = await supabase
       .from("sales_invoices")
       .insert({
@@ -107,8 +101,7 @@ export const salesService = {
         subtotal: invoice.subtotal,
         vat_amount: invoice.vatAmount,
         total_amount: invoice.totalAmount,
-        status: invoice.status,
-        zatca_status: invoice.zatcaStatus,
+        status: invoice.status as any,
         zatca_uuid: invoice.zatcaUUID,
         zatca_hash: invoice.zatcaHash,
         notes: invoice.notes,
@@ -119,16 +112,14 @@ export const salesService = {
 
     if (invoiceError) throw invoiceError;
 
-    // Insert items
     const itemsToInsert = items.map(item => ({
       invoice_id: invoiceData.id,
-      item_name: item.itemName,
-      description: item.description,
+      item_description: item.itemName + (item.description ? ` - ${item.description}` : ""),
       quantity: item.quantity,
       unit_price: item.unitPrice,
       vat_rate: item.vatRate,
       vat_amount: item.vatAmount,
-      total_amount: item.total,
+      total: item.totalAmount,
     }));
 
     const { error: itemsError } = await supabase

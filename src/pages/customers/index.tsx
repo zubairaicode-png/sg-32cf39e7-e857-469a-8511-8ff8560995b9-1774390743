@@ -88,8 +88,8 @@ export default function CustomersPage() {
 
   const filteredCustomers = customers.filter((customer) =>
     customer.nameEnglish.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.customerCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.vatNumber.includes(searchQuery)
+    customer.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.vatNumber && customer.vatNumber.includes(searchQuery))
   );
 
   return (
@@ -192,7 +192,7 @@ export default function CustomersPage() {
                 <TableBody>
                   {filteredCustomers.map((customer) => (
                     <TableRow key={customer.id}>
-                      <TableCell className="font-medium">{customer.customerCode}</TableCell>
+                      <TableCell className="font-medium">{customer.code}</TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">{customer.nameEnglish}</p>

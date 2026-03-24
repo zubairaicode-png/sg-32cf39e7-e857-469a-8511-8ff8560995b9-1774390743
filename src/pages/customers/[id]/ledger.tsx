@@ -27,23 +27,21 @@ export default function CustomerLedgerPage() {
       // Mock data - replace with API call
       setCustomer({
         id: id as string,
-        customerCode: "CUST-001",
+        code: "CUST-001",
         nameEnglish: "Al-Rajhi Trading Company",
         nameArabic: "شركة الراجحي التجارية",
         vatNumber: "300075588900003",
-        crNumber: "1010123456",
+        commercialRegister: "1010123456",
         buildingNumber: "1234",
         streetName: "King Fahd Road",
         district: "Al Olaya",
         city: "Riyadh",
         postalCode: "12211",
-        additionalNumber: "5678",
-        countryCode: "SA",
+        country: "SA",
         email: "info@alrajhi-trading.sa",
         phone: "+966501234567",
-        contactPerson: "Ahmed Al-Rajhi",
         creditLimit: 100000,
-        paymentTerms: 30,
+        paymentTerms: "net30",
         isActive: true,
         createdAt: "2024-01-15T00:00:00Z",
         balance: 45000,
@@ -151,7 +149,7 @@ export default function CustomerLedgerPage() {
               <div className="grid gap-4 md:grid-cols-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Customer Code</p>
-                  <p className="font-semibold">{customer.customerCode}</p>
+                  <p className="font-semibold">{customer.code}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">VAT Number</p>

@@ -8,19 +8,17 @@ export const customerService = {
       .select("*")
       .order("created_at", { ascending: false });
 
-    console.log("Customers query:", { data, error });
     if (error) throw error;
 
     return (data || []).map(customer => ({
       id: customer.id,
       code: customer.customer_code,
-      nameArabic: customer.name_arabic,
+      nameArabic: customer.name_arabic || "",
       nameEnglish: customer.name_english,
       vatNumber: customer.vat_number || undefined,
       commercialRegister: customer.commercial_registration || undefined,
       email: customer.email || undefined,
       phone: customer.phone || undefined,
-      mobile: customer.mobile_number || undefined,
       buildingNumber: customer.building_number || "",
       streetName: customer.street_name || "",
       district: customer.district || "",
@@ -28,7 +26,7 @@ export const customerService = {
       postalCode: customer.postal_code || "",
       country: customer.country || "",
       creditLimit: customer.credit_limit || 0,
-      paymentTerms: customer.payment_term || "",
+      paymentTerms: customer.payment_term || "cash",
       balance: customer.current_balance || 0,
       isActive: customer.is_active || true,
       createdAt: customer.created_at || new Date().toISOString(),
@@ -48,13 +46,12 @@ export const customerService = {
     return {
       id: data.id,
       code: data.customer_code,
-      nameArabic: data.name_arabic,
+      nameArabic: data.name_arabic || "",
       nameEnglish: data.name_english,
       vatNumber: data.vat_number || undefined,
       commercialRegister: data.commercial_registration || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
-      mobile: data.mobile_number || undefined,
       buildingNumber: data.building_number || "",
       streetName: data.street_name || "",
       district: data.district || "",
@@ -62,7 +59,7 @@ export const customerService = {
       postalCode: data.postal_code || "",
       country: data.country || "",
       creditLimit: data.credit_limit || 0,
-      paymentTerms: data.payment_term || "",
+      paymentTerms: data.payment_term || "cash",
       balance: data.current_balance || 0,
       isActive: data.is_active || true,
       createdAt: data.created_at || new Date().toISOString(),
@@ -80,7 +77,6 @@ export const customerService = {
         commercial_registration: customer.commercialRegister,
         email: customer.email,
         phone: customer.phone,
-        mobile_number: customer.mobile,
         building_number: customer.buildingNumber,
         street_name: customer.streetName,
         district: customer.district,
@@ -88,7 +84,7 @@ export const customerService = {
         postal_code: customer.postalCode,
         country: customer.country,
         credit_limit: customer.creditLimit,
-        payment_term: customer.paymentTerms,
+        payment_term: customer.paymentTerms as any,
         is_active: customer.isActive,
       })
       .select()
@@ -99,13 +95,12 @@ export const customerService = {
     return {
       id: data.id,
       code: data.customer_code,
-      nameArabic: data.name_arabic,
+      nameArabic: data.name_arabic || "",
       nameEnglish: data.name_english,
       vatNumber: data.vat_number || undefined,
       commercialRegister: data.commercial_registration || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
-      mobile: data.mobile_number || undefined,
       buildingNumber: data.building_number || "",
       streetName: data.street_name || "",
       district: data.district || "",
@@ -113,7 +108,7 @@ export const customerService = {
       postalCode: data.postal_code || "",
       country: data.country || "",
       creditLimit: data.credit_limit || 0,
-      paymentTerms: data.payment_term || "",
+      paymentTerms: data.payment_term || "cash",
       balance: data.current_balance || 0,
       isActive: data.is_active || true,
       createdAt: data.created_at || new Date().toISOString(),
@@ -129,7 +124,6 @@ export const customerService = {
     if (updates.commercialRegister) updateData.commercial_registration = updates.commercialRegister;
     if (updates.email) updateData.email = updates.email;
     if (updates.phone) updateData.phone = updates.phone;
-    if (updates.mobile) updateData.mobile_number = updates.mobile;
     if (updates.buildingNumber) updateData.building_number = updates.buildingNumber;
     if (updates.streetName) updateData.street_name = updates.streetName;
     if (updates.district) updateData.district = updates.district;
@@ -152,13 +146,12 @@ export const customerService = {
     return {
       id: data.id,
       code: data.customer_code,
-      nameArabic: data.name_arabic,
+      nameArabic: data.name_arabic || "",
       nameEnglish: data.name_english,
       vatNumber: data.vat_number || undefined,
       commercialRegister: data.commercial_registration || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
-      mobile: data.mobile_number || undefined,
       buildingNumber: data.building_number || "",
       streetName: data.street_name || "",
       district: data.district || "",
@@ -166,7 +159,7 @@ export const customerService = {
       postalCode: data.postal_code || "",
       country: data.country || "",
       creditLimit: data.credit_limit || 0,
-      paymentTerms: data.payment_term || "",
+      paymentTerms: data.payment_term || "cash",
       balance: data.current_balance || 0,
       isActive: data.is_active || true,
       createdAt: data.created_at || new Date().toISOString(),

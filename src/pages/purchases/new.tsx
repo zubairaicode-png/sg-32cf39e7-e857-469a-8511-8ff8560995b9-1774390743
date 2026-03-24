@@ -25,29 +25,27 @@ export default function NewPurchaseInvoicePage() {
     supplierInvoiceNumber: "",
   });
   const [items, setItems] = useState<InvoiceItem[]>([
-    { id: "1", description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
+    { id: "1", itemName: "", description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
   ]);
 
   useEffect(() => {
     setSuppliers([
       {
         id: "1",
-        supplierCode: "SUP-001",
+        code: "SUP-001",
         nameEnglish: "National Electronics",
         nameArabic: "الوطنية للإلكترونيات",
         vatNumber: "300012345600003",
-        crNumber: "1010987654",
+        commercialRegister: "1010987654",
         buildingNumber: "4321",
         streetName: "King Abdullah Road",
         district: "Al Rahmaniyah",
         city: "Riyadh",
         postalCode: "12345",
-        additionalNumber: "1122",
-        countryCode: "SA",
+        country: "SA",
         email: "sales@nationalelectronics.sa",
         phone: "+966509876543",
-        contactPerson: "Mohammed Al-Salem",
-        paymentTerms: 30,
+        paymentTerms: "net30",
         isActive: true,
         createdAt: "2024-01-10T00:00:00Z",
         balance: -25000,
@@ -72,7 +70,7 @@ export default function NewPurchaseInvoicePage() {
   const addItem = () => {
     setItems([
       ...items,
-      { id: Date.now().toString(), description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
+      { id: Date.now().toString(), itemName: "", description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
     ]);
   };
 
@@ -175,7 +173,8 @@ export default function NewPurchaseInvoicePage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[300px]">Description</TableHead>
+                      <TableHead className="w-[200px]">Item</TableHead>
+                      <TableHead className="w-[200px]">Description</TableHead>
                       <TableHead className="w-[100px]">Qty</TableHead>
                       <TableHead className="w-[120px]">Unit Price</TableHead>
                       <TableHead className="w-[100px]">VAT %</TableHead>
@@ -187,6 +186,14 @@ export default function NewPurchaseInvoicePage() {
                   <TableBody>
                     {items.map((item, index) => (
                       <TableRow key={item.id}>
+                        <TableCell>
+                          <Input
+                            placeholder="Item name"
+                            value={item.itemName}
+                            onChange={(e) => handleItemChange(index, "itemName", e.target.value)}
+                            required
+                          />
+                        </TableCell>
                         <TableCell>
                           <Input
                             placeholder="Item description"

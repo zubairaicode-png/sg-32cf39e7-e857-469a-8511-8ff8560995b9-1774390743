@@ -9,18 +9,17 @@ export const accountingService = {
       .select("*")
       .order("account_code", { ascending: true });
 
-    console.log("Accounts query:", { data, error });
     if (error) throw error;
 
     return (data || []).map(account => ({
       id: account.id,
       code: account.account_code,
-      nameArabic: account.account_name, // Using account_name as a fallback
+      nameArabic: account.account_name,
       nameEnglish: account.account_name,
       type: account.account_type as ChartOfAccount["type"],
       parentId: account.parent_account_id || undefined,
       isActive: account.is_active || true,
-      balance: 0, // Computed field, not in DB
+      balance: 0, 
       createdAt: account.created_at || new Date().toISOString(),
     }));
   },
@@ -30,8 +29,8 @@ export const accountingService = {
       .from("chart_of_accounts")
       .insert({
         account_code: account.code,
-        account_name: account.nameEnglish, // Storing English name as primary
-        account_type: account.type,
+        account_name: account.nameEnglish,
+        account_type: account.type as any,
         parent_account_id: account.parentId,
         is_active: account.isActive,
       })
@@ -66,7 +65,6 @@ export const accountingService = {
       `)
       .order("created_at", { ascending: false });
 
-    console.log("Journal entries query:", { data, error });
     if (error) throw error;
 
     return (data || []).map(entry => ({
@@ -74,7 +72,7 @@ export const accountingService = {
       entryNumber: entry.entry_number,
       date: entry.entry_date,
       description: entry.description || "",
-      status: "posted" as JournalEntry["status"], // Default to posted
+      status: "posted" as JournalEntry["status"], 
       totalDebit: entry.total_debit,
       totalCredit: entry.total_credit,
       createdAt: entry.created_at || new Date().toISOString(),
@@ -88,14 +86,13 @@ export const accountingService = {
           nameArabic: line.account.account_name,
         } : undefined,
         description: line.description || "",
-        debit: line.debit,
-        credit: line.credit,
+        debit: line.debit || 0,
+        credit: line.credit || 0,
       })) : [],
     }));
   },
 
   async createJournalEntry(entry: Omit<JournalEntry, "id" | "createdAt">, lines: Omit<JournalLine, "id" | "account">[]): Promise<JournalEntry> {
-    // Insert journal entry
     const { data: entryData, error: entryError } = await supabase
       .from("journal_entries")
       .insert({
@@ -111,14 +108,25 @@ export const accountingService = {
 
     if (entryError) throw entryError;
 
-    // Insert lines
-    const linesToInsert = lines.map(line => ({
-      entry_id: entryData.id,
-      account_id: line.accountId,
-      description: line.description,
-      debit: line.debit,
-      credit: line.credit,
-    }));
+    // Fetch account details for lines
+    const accountIds = lines.map(l => l.accountId);
+    const { data: accounts } = await supabase
+      .from("chart_of_accounts")
+      .select("id, account_code, account_name")
+      .in("id", accountIds);
+
+    const linesToInsert = lines.map(line => {
+      const acc = accounts?.find(a => a.id === line.accountId);
+      return {
+        entry_id: entryData.id,
+        account_id: line.accountId,
+        account_code: acc?.account_code || "",
+        account_name: acc?.account_name || "",
+        description: line.description,
+        debit: line.debit,
+        credit: line.credit,
+      };
+    });
 
     const { error: linesError } = await supabase
       .from("journal_entry_lines")
@@ -126,7 +134,6 @@ export const accountingService = {
 
     if (linesError) throw linesError;
 
-    // Fetch complete entry with lines
     const { data: completeEntry, error: fetchError } = await supabase
       .from("journal_entries")
       .select(`
@@ -160,8 +167,8 @@ export const accountingService = {
           nameArabic: line.account.account_name,
         } : undefined,
         description: line.description || "",
-        debit: line.debit,
-        credit: line.credit,
+        debit: line.debit || 0,
+        credit: line.credit || 0,
       })) : [],
     };
   },
