@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { userService } from "@/services/userService";
+import type { Permission } from "@/types";
 
 export default function NewUserPage() {
   const router = useRouter();
@@ -22,9 +24,33 @@ export default function NewUserPage() {
     fullName: "",
     password: "",
     confirmPassword: "",
-    role: "viewer",
+    role: "viewer" as any,
     isActive: true,
   });
+
+  const getRolePermissions = (role: string): Permission[] => {
+    const allPermissions: Permission[] = [
+      "manage_users", "view_customers", "manage_customers",
+      "view_suppliers", "manage_suppliers", "create_sales_invoice",
+      "view_sales", "create_purchase_invoice", "view_purchases",
+      "manage_accounting", "view_reports"
+    ];
+
+    switch (role) {
+      case "admin":
+        return allPermissions;
+      case "accountant":
+        return ["view_customers", "view_suppliers", "view_sales", "view_purchases", "manage_accounting", "view_reports"];
+      case "sales":
+        return ["view_customers", "manage_customers", "create_sales_invoice", "view_sales", "view_reports"];
+      case "purchase":
+        return ["view_suppliers", "manage_suppliers", "create_purchase_invoice", "view_purchases", "view_reports"];
+      case "viewer":
+        return ["view_customers", "view_suppliers", "view_sales", "view_purchases", "view_reports"];
+      default:
+        return ["view_reports"];
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,13 +66,31 @@ export default function NewUserPage() {
 
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      await userService.create({
+        username: formData.username,
+        email: formData.email,
+        fullName: formData.fullName,
+        role: formData.role,
+        permissions: getRolePermissions(formData.role),
+        isActive: formData.isActive,
+      });
+
       toast({
         title: "User Created",
         description: `${formData.fullName} has been successfully added.`,
       });
       router.push("/users");
-    }, 1000);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create user. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (field: string, value: string | boolean) => {

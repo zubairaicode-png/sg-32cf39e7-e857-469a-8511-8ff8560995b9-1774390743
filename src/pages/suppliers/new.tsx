@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { supplierService } from "@/services/supplierService";
 
 export default function NewSupplierPage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function NewSupplierPage() {
     email: "",
     phone: "",
     contactPerson: "",
-    paymentTerms: "",
+    paymentTerms: "net30",
     isActive: true,
   });
 
@@ -39,13 +40,40 @@ export default function NewSupplierPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      await supplierService.create({
+        code: formData.supplierCode,
+        nameEnglish: formData.nameEnglish,
+        nameArabic: formData.nameArabic,
+        vatNumber: formData.vatNumber || undefined,
+        commercialRegister: formData.crNumber || undefined,
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+        buildingNumber: formData.buildingNumber,
+        streetName: formData.streetName,
+        district: formData.district,
+        city: formData.city,
+        postalCode: formData.postalCode,
+        country: formData.countryCode,
+        paymentTerms: formData.paymentTerms,
+        isActive: formData.isActive,
+      });
+
       toast({
         title: "Supplier Created",
         description: `${formData.nameEnglish} has been successfully added.`,
       });
       router.push("/suppliers");
-    }, 1000);
+    } catch (error) {
+      console.error("Error creating supplier:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create supplier. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (field: string, value: string | boolean) => {

@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { customerService } from "@/services/customerService";
 
 export default function NewCustomerPage() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function NewCustomerPage() {
     phone: "",
     contactPerson: "",
     creditLimit: "",
-    paymentTerms: "",
+    paymentTerms: "net30",
     isActive: true,
   });
 
@@ -40,14 +41,41 @@ export default function NewCustomerPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await customerService.create({
+        code: formData.customerCode,
+        nameEnglish: formData.nameEnglish,
+        nameArabic: formData.nameArabic,
+        vatNumber: formData.vatNumber || undefined,
+        commercialRegister: formData.crNumber || undefined,
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+        buildingNumber: formData.buildingNumber,
+        streetName: formData.streetName,
+        district: formData.district,
+        city: formData.city,
+        postalCode: formData.postalCode,
+        country: formData.countryCode,
+        creditLimit: parseFloat(formData.creditLimit) || 0,
+        paymentTerms: formData.paymentTerms,
+        isActive: formData.isActive,
+      });
+
       toast({
         title: "Customer Created",
         description: `${formData.nameEnglish} has been successfully added.`,
       });
       router.push("/customers");
-    }, 1000);
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create customer. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (field: string, value: string | boolean) => {
