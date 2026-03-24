@@ -86,7 +86,7 @@ export const supplierService = {
       city: supplier.city,
       postal_code: supplier.postalCode,
       country: supplier.country,
-      payment_term: supplier.paymentTerms,
+      payment_term: supplier.paymentTerms as "cash" | "net15" | "net30" | "net60" | "net90",
       is_active: supplier.isActive,
     };
 
@@ -140,7 +140,7 @@ export const supplierService = {
     if (updates.city !== undefined) updateData.city = updates.city;
     if (updates.postalCode !== undefined) updateData.postal_code = updates.postalCode;
     if (updates.country !== undefined) updateData.country = updates.country;
-    if (updates.paymentTerms !== undefined) updateData.payment_term = updates.paymentTerms;
+    if (updates.paymentTerms !== undefined) updateData.payment_term = updates.paymentTerms as "cash" | "net15" | "net30" | "net60" | "net90";
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
 
     const { data, error } = await supabase

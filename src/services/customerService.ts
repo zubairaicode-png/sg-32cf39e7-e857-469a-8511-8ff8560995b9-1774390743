@@ -89,7 +89,7 @@ export const customerService = {
       postal_code: customer.postalCode,
       country: customer.country,
       credit_limit: customer.creditLimit,
-      payment_term: customer.paymentTerms,
+      payment_term: customer.paymentTerms as "cash" | "net15" | "net30" | "net60" | "net90",
       is_active: customer.isActive,
     };
 
@@ -145,7 +145,7 @@ export const customerService = {
     if (updates.postalCode !== undefined) updateData.postal_code = updates.postalCode;
     if (updates.country !== undefined) updateData.country = updates.country;
     if (updates.creditLimit !== undefined) updateData.credit_limit = updates.creditLimit;
-    if (updates.paymentTerms !== undefined) updateData.payment_term = updates.paymentTerms;
+    if (updates.paymentTerms !== undefined) updateData.payment_term = updates.paymentTerms as "cash" | "net15" | "net30" | "net60" | "net90";
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
 
     const { data, error } = await supabase
