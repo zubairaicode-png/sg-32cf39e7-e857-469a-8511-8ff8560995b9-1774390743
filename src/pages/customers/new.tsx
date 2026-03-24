@@ -42,12 +42,15 @@ export default function NewCustomerPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    alert("Save button was clicked! Check console now.");
+    
     console.log("=== FORM SUBMIT STARTED ===");
     console.log("Form event:", e);
     console.log("Current user:", user);
     
     if (!user) {
       console.error("ERROR: No user found!");
+      alert("ERROR: Not logged in!");
       toast({
         title: "Authentication Error",
         description: "You must be logged in to create customers.",
@@ -57,6 +60,7 @@ export default function NewCustomerPage() {
     }
 
     console.log("User is authenticated, proceeding with save...");
+    alert("User authenticated: " + user.username);
     setIsLoading(true);
 
     try {
@@ -83,10 +87,12 @@ export default function NewCustomerPage() {
       };
       
       console.log("Calling customerService.create with:", customerData);
+      alert("About to call database...");
 
       const result = await customerService.create(customerData);
       
       console.log("Customer created successfully! Result:", result);
+      alert("Success! Customer created: " + result.code);
 
       toast({
         title: "Customer Created",
@@ -100,6 +106,8 @@ export default function NewCustomerPage() {
       console.error("Error object:", error);
       console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
       console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+      
+      alert("ERROR: " + (error instanceof Error ? error.message : "Unknown error"));
       
       toast({
         title: "Error",
