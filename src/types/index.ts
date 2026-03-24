@@ -27,50 +27,101 @@ export type Permission =
 
 export interface Customer {
   id: string;
-  customerCode: string;
+  code: string;
   nameArabic: string;
   nameEnglish: string;
-  vatNumber: string;
-  crNumber: string;
+  vatNumber?: string;
+  commercialRegister?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
   buildingNumber: string;
   streetName: string;
   district: string;
   city: string;
   postalCode: string;
-  additionalNumber: string;
-  countryCode: string;
-  email: string;
-  phone: string;
-  contactPerson: string;
+  country: string;
   creditLimit: number;
-  paymentTerms: number;
+  paymentTerms: string;
+  balance: number;
   isActive: boolean;
   createdAt: string;
-  balance: number;
 }
 
 export interface Supplier {
   id: string;
-  supplierCode: string;
+  code: string;
   nameArabic: string;
   nameEnglish: string;
-  vatNumber: string;
-  crNumber: string;
+  vatNumber?: string;
+  commercialRegister?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
   buildingNumber: string;
   streetName: string;
   district: string;
   city: string;
   postalCode: string;
-  additionalNumber: string;
-  countryCode: string;
-  email: string;
-  phone: string;
-  contactPerson: string;
-  paymentTerms: number;
+  country: string;
+  creditLimit: number;
+  paymentTerms: string;
+  balance: number;
   isActive: boolean;
   createdAt: string;
-  balance: number;
 }
+
+export interface ChartOfAccount {
+  id: string;
+  code: string;
+  nameArabic: string;
+  nameEnglish: string;
+  type: "asset" | "liability" | "equity" | "revenue" | "expense";
+  parentId?: string;
+  isActive: boolean;
+  balance: number;
+  createdAt: string;
+}
+
+export interface JournalEntry {
+  id: string;
+  entryNumber: string;
+  date: string;
+  description: string;
+  status: "draft" | "posted";
+  totalDebit: number;
+  totalCredit: number;
+  lines: JournalLine[];
+  createdAt: string;
+}
+
+export interface JournalLine {
+  id: string;
+  accountId: string;
+  account?: {
+    id: string;
+    code: string;
+    nameEnglish: string;
+    nameArabic: string;
+  };
+  description: string;
+  debit: number;
+  credit: number;
+}
+
+export interface InvoiceItem {
+  id: string;
+  itemName: string;
+  description?: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate: number;
+  vatAmount: number;
+  total: number;
+}
+
+export interface SalesInvoiceItem extends InvoiceItem {}
+export interface PurchaseInvoiceItem extends InvoiceItem {}
 
 export interface SalesInvoice {
   id: string;
@@ -109,42 +160,6 @@ export interface PurchaseInvoice {
   notes?: string;
   createdBy: string;
   createdAt: string;
-}
-
-export interface InvoiceItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  vatRate: number;
-  vatAmount: number;
-  totalAmount: number;
-}
-
-export interface JournalEntry {
-  id: string;
-  entryNumber: string;
-  entryDate: string;
-  referenceType: "sales_invoice" | "purchase_invoice" | "payment" | "receipt" | "manual";
-  referenceNumber?: string;
-  description: string;
-  lines: JournalLine[];
-  totalDebit: number;
-  totalCredit: number;
-  status: "draft" | "posted";
-  createdBy: string;
-  createdAt: string;
-  postedAt?: string;
-}
-
-export interface JournalLine {
-  id: string;
-  accountId: string;
-  accountCode: string;
-  accountName: string;
-  debit: number;
-  credit: number;
-  description?: string;
 }
 
 export interface Account {
