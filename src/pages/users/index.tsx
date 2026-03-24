@@ -27,6 +27,12 @@ export default function UsersPage() {
         email: "admin@maka-erp.com",
         fullName: "System Administrator",
         role: "admin",
+        permissions: [
+          "manage_users", "view_customers", "manage_customers", 
+          "view_suppliers", "manage_suppliers", "create_sales_invoice", 
+          "view_sales", "create_purchase_invoice", "view_purchases", 
+          "manage_accounting", "view_reports"
+        ],
         isActive: true,
         createdAt: "2024-01-01T00:00:00Z",
       },
@@ -36,6 +42,10 @@ export default function UsersPage() {
         email: "accountant@maka-erp.com",
         fullName: "Mohammed Al-Harbi",
         role: "accountant",
+        permissions: [
+          "view_customers", "view_suppliers", "view_sales", 
+          "view_purchases", "manage_accounting", "view_reports"
+        ],
         isActive: true,
         createdAt: "2024-02-15T00:00:00Z",
       },
@@ -45,6 +55,10 @@ export default function UsersPage() {
         email: "sales@maka-erp.com",
         fullName: "Fatima Al-Qahtani",
         role: "sales",
+        permissions: [
+          "view_customers", "create_sales_invoice", 
+          "view_sales", "view_reports"
+        ],
         isActive: true,
         createdAt: "2024-03-01T00:00:00Z",
       },

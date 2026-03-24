@@ -11,14 +11,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const ALL_PERMISSIONS: Permission[] = [
+  "manage_users",
+  "view_customers",
+  "manage_customers",
+  "view_suppliers",
+  "manage_suppliers",
+  "create_sales_invoice",
+  "view_sales",
+  "create_purchase_invoice",
+  "view_purchases",
+  "manage_accounting",
+  "view_reports"
+];
+
 const DEMO_USERS: Record<string, User> = {
   admin: {
     id: "1",
     username: "admin",
     email: "admin@company.sa",
     fullName: "System Administrator",
-    role: UserRole.ADMIN,
-    permissions: Object.values(Permission),
+    role: "admin",
+    permissions: ALL_PERMISSIONS,
     isActive: true,
     createdAt: "2024-01-01T00:00:00Z",
   },
@@ -27,14 +41,14 @@ const DEMO_USERS: Record<string, User> = {
     username: "accountant",
     email: "accountant@company.sa",
     fullName: "Senior Accountant",
-    role: UserRole.ACCOUNTANT,
+    role: "accountant",
     permissions: [
-      Permission.VIEW_CUSTOMERS,
-      Permission.VIEW_SUPPLIERS,
-      Permission.VIEW_SALES,
-      Permission.VIEW_PURCHASES,
-      Permission.MANAGE_ACCOUNTING,
-      Permission.VIEW_REPORTS,
+      "view_customers",
+      "view_suppliers",
+      "view_sales",
+      "view_purchases",
+      "manage_accounting",
+      "view_reports",
     ],
     isActive: true,
     createdAt: "2024-01-01T00:00:00Z",
