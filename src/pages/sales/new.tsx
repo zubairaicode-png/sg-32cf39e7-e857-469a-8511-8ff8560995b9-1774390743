@@ -9,13 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import type { Customer, InvoiceItem } from "@/types";
+import { customerService } from "@/services/customerService";
+import { salesService } from "@/services/salesService";
 
 export default function NewSalesInvoicePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [formData, setFormData] = useState({
@@ -25,35 +29,11 @@ export default function NewSalesInvoicePage() {
     dueDate: "",
   });
   const [items, setItems] = useState<InvoiceItem[]>([
-    { id: "1", description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
+    { id: "1", itemName: "", description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
   ]);
 
   useEffect(() => {
-    setCustomers([
-      {
-        id: "1",
-        customerCode: "CUST-001",
-        nameEnglish: "Al-Rajhi Trading Company",
-        nameArabic: "شركة الراجحي التجارية",
-        vatNumber: "300075588900003",
-        crNumber: "1010123456",
-        buildingNumber: "1234",
-        streetName: "King Fahd Road",
-        district: "Al Olaya",
-        city: "Riyadh",
-        postalCode: "12211",
-        additionalNumber: "5678",
-        countryCode: "SA",
-        email: "info@alrajhi-trading.sa",
-        phone: "+966501234567",
-        contactPerson: "Ahmed Al-Rajhi",
-        creditLimit: 100000,
-        paymentTerms: 30,
-        isActive: true,
-        createdAt: "2024-01-15T00:00:00Z",
-        balance: 45000,
-      },
-    ]);
+    customerService.getAll().then(setCustomers).catch(console.error);
   }, []);
 
   const calculateLineItem = (item: InvoiceItem): InvoiceItem => {
@@ -73,7 +53,7 @@ export default function NewSalesInvoicePage() {
   const addItem = () => {
     setItems([
       ...items,
-      { id: Date.now().toString(), description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
+      { id: Date.now().toString(), itemName: "", description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
     ]);
   };
 
@@ -89,15 +69,54 @@ export default function NewSalesInvoicePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.customerId) {
+      toast({ title: "Error", description: "Please select a customer", variant: "destructive" });
+      return;
+    }
+    
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      const selectedCustomer = customers.find(c => c.id === formData.customerId);
+      
+      await salesService.create({
+        invoiceNumber: `INV-${Date.now()}`,
+        invoiceType: formData.invoiceType as any,
+        customerId: formData.customerId,
+        customerName: selectedCustomer?.nameEnglish || "",
+        invoiceDate: formData.invoiceDate,
+        dueDate: formData.dueDate,
+        subtotal,
+        vatAmount: totalVat,
+        totalAmount: grandTotal,
+        status: "draft",
+        notes: "",
+        createdBy: user?.id || "system",
+      }, items.map(item => ({
+        itemName: item.description || "Item", // Fallback to description for item name
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        vatRate: item.vatRate,
+        vatAmount: item.vatAmount,
+        totalAmount: item.totalAmount
+      })));
+
       toast({
         title: "Sales Invoice Created",
         description: "Invoice has been created and submitted to ZATCA for clearance.",
       });
       router.push("/sales");
-    }, 1000);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to create sales invoice.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -13,94 +13,62 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Download, Printer } from "lucide-react";
+import { ArrowLeft, Download, Printer, Loader2 } from "lucide-react";
 import type { Customer, LedgerEntry } from "@/types";
+import { customerService } from "@/services/customerService";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function CustomerLedgerPage() {
   const router = useRouter();
   const { id } = router.query;
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
-      // Mock data - replace with API call
-      setCustomer({
-        id: id as string,
-        code: "CUST-001",
-        nameEnglish: "Al-Rajhi Trading Company",
-        nameArabic: "شركة الراجحي التجارية",
-        vatNumber: "300075588900003",
-        commercialRegister: "1010123456",
-        buildingNumber: "1234",
-        streetName: "King Fahd Road",
-        district: "Al Olaya",
-        city: "Riyadh",
-        postalCode: "12211",
-        country: "SA",
-        email: "info@alrajhi-trading.sa",
-        phone: "+966501234567",
-        creditLimit: 100000,
-        paymentTerms: "net30",
-        isActive: true,
-        createdAt: "2024-01-15T00:00:00Z",
-        balance: 45000,
-      });
+      const fetchData = async () => {
+        try {
+          const customerData = await customerService.getById(id as string);
+          setCustomer(customerData);
 
-      setLedger([
-        {
-          id: "1",
-          date: "2024-03-01",
-          referenceType: "Sales Invoice",
-          referenceNumber: "INV-2024-001",
-          description: "Sales Invoice - Office Supplies",
-          debit: 23000,
-          credit: 0,
-          balance: 23000,
-        },
-        {
-          id: "2",
-          date: "2024-03-05",
-          referenceType: "Payment",
-          referenceNumber: "PMT-2024-001",
-          description: "Payment Received - Bank Transfer",
-          debit: 0,
-          credit: 23000,
-          balance: 0,
-        },
-        {
-          id: "3",
-          date: "2024-03-10",
-          referenceType: "Sales Invoice",
-          referenceNumber: "INV-2024-015",
-          description: "Sales Invoice - IT Equipment",
-          debit: 45000,
-          credit: 0,
-          balance: 45000,
-        },
-        {
-          id: "4",
-          date: "2024-03-15",
-          referenceType: "Sales Invoice",
-          referenceNumber: "INV-2024-028",
-          description: "Sales Invoice - Consulting Services",
-          debit: 15000,
-          credit: 0,
-          balance: 60000,
-        },
-        {
-          id: "5",
-          date: "2024-03-20",
-          referenceType: "Payment",
-          referenceNumber: "PMT-2024-012",
-          description: "Payment Received - Check",
-          debit: 0,
-          credit: 15000,
-          balance: 45000,
-        },
-      ]);
+          const { data: ledgerData, error } = await supabase
+            .from('ledger_entries')
+            .select('*')
+            .eq('customer_id', id)
+            .order('entry_date', { ascending: true });
+
+          if (!error && ledgerData) {
+            setLedger(ledgerData.map(entry => ({
+              id: entry.id,
+              date: entry.entry_date,
+              referenceType: entry.transaction_type,
+              referenceNumber: entry.reference_number,
+              description: entry.description,
+              debit: entry.debit || 0,
+              credit: entry.credit || 0,
+              balance: entry.balance || 0,
+            })));
+          }
+        } catch (error) {
+          console.error("Error fetching ledger:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchData();
     }
   }, [id]);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-full">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   if (!customer) {
     return null;

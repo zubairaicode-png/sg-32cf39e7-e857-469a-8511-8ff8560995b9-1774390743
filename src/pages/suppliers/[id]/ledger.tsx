@@ -6,64 +6,62 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Download, Printer } from "lucide-react";
+import { ArrowLeft, Download, Printer, Loader2 } from "lucide-react";
 import type { Supplier, LedgerEntry } from "@/types";
+import { supplierService } from "@/services/supplierService";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SupplierLedgerPage() {
   const router = useRouter();
   const { id } = router.query;
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
-      setSupplier({
-        id: id as string,
-        supplierCode: "SUP-001",
-        nameEnglish: "National Electronics",
-        nameArabic: "الوطنية للإلكترونيات",
-        vatNumber: "300012345600003",
-        crNumber: "1010987654",
-        buildingNumber: "4321",
-        streetName: "King Abdullah Road",
-        district: "Al Rahmaniyah",
-        city: "Riyadh",
-        postalCode: "12345",
-        additionalNumber: "1122",
-        countryCode: "SA",
-        email: "sales@nationalelectronics.sa",
-        phone: "+966509876543",
-        contactPerson: "Mohammed Al-Salem",
-        paymentTerms: 30,
-        isActive: true,
-        createdAt: "2024-01-10T00:00:00Z",
-        balance: -25000,
-      });
+      const fetchData = async () => {
+        try {
+          const supplierData = await supplierService.getById(id as string);
+          setSupplier(supplierData);
 
-      setLedger([
-        {
-          id: "1",
-          date: "2024-03-01",
-          referenceType: "Purchase Invoice",
-          referenceNumber: "PINV-2024-001",
-          description: "Purchase - Electronic Components",
-          debit: 0,
-          credit: 35000,
-          balance: -35000,
-        },
-        {
-          id: "2",
-          date: "2024-03-10",
-          referenceType: "Payment",
-          referenceNumber: "PAY-2024-005",
-          description: "Payment - Bank Transfer",
-          debit: 10000,
-          credit: 0,
-          balance: -25000,
-        },
-      ]);
+          const { data: ledgerData, error } = await supabase
+            .from('ledger_entries')
+            .select('*')
+            .eq('supplier_id', id)
+            .order('entry_date', { ascending: true });
+
+          if (!error && ledgerData) {
+            setLedger(ledgerData.map(entry => ({
+              id: entry.id,
+              date: entry.entry_date,
+              referenceType: entry.transaction_type,
+              referenceNumber: entry.reference_number,
+              description: entry.description,
+              debit: entry.debit || 0,
+              credit: entry.credit || 0,
+              balance: entry.balance || 0,
+            })));
+          }
+        } catch (error) {
+          console.error("Error fetching ledger:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchData();
     }
   }, [id]);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-full">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   if (!supplier) return null;
 
@@ -108,7 +106,7 @@ export default function SupplierLedgerPage() {
               <div className="grid gap-4 md:grid-cols-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Supplier Code</p>
-                  <p className="font-semibold">{supplier.supplierCode}</p>
+                  <p className="font-semibold">{supplier.code}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">VAT Number</p>

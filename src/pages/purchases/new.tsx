@@ -9,13 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import type { Supplier, InvoiceItem } from "@/types";
+import { supplierService } from "@/services/supplierService";
+import { purchaseService } from "@/services/purchaseService";
 
 export default function NewPurchaseInvoicePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [formData, setFormData] = useState({
@@ -29,28 +33,7 @@ export default function NewPurchaseInvoicePage() {
   ]);
 
   useEffect(() => {
-    setSuppliers([
-      {
-        id: "1",
-        code: "SUP-001",
-        nameEnglish: "National Electronics",
-        nameArabic: "الوطنية للإلكترونيات",
-        vatNumber: "300012345600003",
-        commercialRegister: "1010987654",
-        buildingNumber: "4321",
-        streetName: "King Abdullah Road",
-        district: "Al Rahmaniyah",
-        city: "Riyadh",
-        postalCode: "12345",
-        country: "SA",
-        email: "sales@nationalelectronics.sa",
-        phone: "+966509876543",
-        paymentTerms: "net30",
-        isActive: true,
-        createdAt: "2024-01-10T00:00:00Z",
-        balance: -25000,
-      },
-    ]);
+    supplierService.getAll().then(setSuppliers).catch(console.error);
   }, []);
 
   const calculateLineItem = (item: InvoiceItem): InvoiceItem => {
@@ -86,15 +69,53 @@ export default function NewPurchaseInvoicePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.supplierId) {
+      toast({ title: "Error", description: "Please select a supplier", variant: "destructive" });
+      return;
+    }
+    
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      const selectedSupplier = suppliers.find(s => s.id === formData.supplierId);
+      
+      await purchaseService.create({
+        invoiceNumber: formData.supplierInvoiceNumber,
+        supplierId: formData.supplierId,
+        supplierName: selectedSupplier?.nameEnglish || "",
+        invoiceDate: formData.invoiceDate,
+        dueDate: formData.dueDate,
+        subtotal,
+        vatAmount: totalVat,
+        totalAmount: grandTotal,
+        status: "draft",
+        notes: "",
+        createdBy: user?.id || "system",
+      }, items.map(item => ({
+        itemName: item.itemName,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        vatRate: item.vatRate,
+        vatAmount: item.vatAmount,
+        totalAmount: item.totalAmount
+      })));
+
       toast({
         title: "Purchase Invoice Created",
         description: "Invoice has been recorded successfully.",
       });
       router.push("/purchases");
-    }, 1000);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to create invoice.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

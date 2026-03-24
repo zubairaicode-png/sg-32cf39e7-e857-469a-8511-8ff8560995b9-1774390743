@@ -9,60 +9,31 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Lock, Unlock } from "lucide-react";
+import { Plus, Search, Edit, Lock, Unlock, Loader2 } from "lucide-react";
 import type { User } from "@/types";
+import { userService } from "@/services/userService";
 
 export default function UsersPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    setUsers([
-      {
-        id: "1",
-        username: "admin",
-        email: "admin@maka-erp.com",
-        fullName: "System Administrator",
-        role: "admin",
-        permissions: [
-          "manage_users", "view_customers", "manage_customers", 
-          "view_suppliers", "manage_suppliers", "create_sales_invoice", 
-          "view_sales", "create_purchase_invoice", "view_purchases", 
-          "manage_accounting", "view_reports"
-        ],
-        isActive: true,
-        createdAt: "2024-01-01T00:00:00Z",
-      },
-      {
-        id: "2",
-        username: "accountant",
-        email: "accountant@maka-erp.com",
-        fullName: "Mohammed Al-Harbi",
-        role: "accountant",
-        permissions: [
-          "view_customers", "view_suppliers", "view_sales", 
-          "view_purchases", "manage_accounting", "view_reports"
-        ],
-        isActive: true,
-        createdAt: "2024-02-15T00:00:00Z",
-      },
-      {
-        id: "3",
-        username: "sales",
-        email: "sales@maka-erp.com",
-        fullName: "Fatima Al-Qahtani",
-        role: "sales",
-        permissions: [
-          "view_customers", "create_sales_invoice", 
-          "view_sales", "view_reports"
-        ],
-        isActive: true,
-        createdAt: "2024-03-01T00:00:00Z",
-      },
-    ]);
+    const fetchUsers = async () => {
+      try {
+        const data = await userService.getAll();
+        setUsers(data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
   }, [isAuthenticated]);
 
   if (!isAuthenticated) return null;
@@ -102,49 +73,55 @@ export default function UsersPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Username</TableHead>
-                    <TableHead>Full Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.username}</TableCell>
-                      <TableCell>{user.fullName}</TableCell>
-                      <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                      <TableCell>
-                        <Badge className={roleColors[user.role]}>{user.role.toUpperCase()}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.isActive ? "default" : "secondary"}>
-                          {user.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(user.createdAt).toLocaleDateString("en-GB")}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Link href={`/users/${user.id}/edit`}>
-                            <Button variant="ghost" size="icon" title="Edit User">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </Link>
-                          <Button variant="ghost" size="icon" title={user.isActive ? "Deactivate" : "Activate"}>
-                            {user.isActive ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                          </Button>
-                        </div>
-                      </TableCell>
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Full Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.username}</TableCell>
+                        <TableCell>{user.fullName}</TableCell>
+                        <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                        <TableCell>
+                          <Badge className={roleColors[user.role]}>{user.role.toUpperCase()}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.isActive ? "default" : "secondary"}>
+                            {user.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(user.createdAt).toLocaleDateString("en-GB")}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Link href={`/users/${user.id}/edit`}>
+                              <Button variant="ghost" size="icon" title="Edit User">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                            <Button variant="ghost" size="icon" title={user.isActive ? "Deactivate" : "Activate"}>
+                              {user.isActive ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </div>
