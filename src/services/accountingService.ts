@@ -7,21 +7,21 @@ export const accountingService = {
     const { data, error } = await supabase
       .from("chart_of_accounts")
       .select("*")
-      .order("code", { ascending: true });
+      .order("account_code", { ascending: true });
 
     console.log("Accounts query:", { data, error });
     if (error) throw error;
 
     return (data || []).map(account => ({
       id: account.id,
-      code: account.code,
-      nameArabic: account.name_arabic,
-      nameEnglish: account.name_english,
-      type: account.type as ChartOfAccount["type"],
-      parentId: account.parent_id || undefined,
-      isActive: account.is_active,
-      balance: account.balance,
-      createdAt: account.created_at,
+      code: account.account_code,
+      nameArabic: account.account_name, // Using account_name as a fallback
+      nameEnglish: account.account_name,
+      type: account.account_type as ChartOfAccount["type"],
+      parentId: account.parent_account_id || undefined,
+      isActive: account.is_active || true,
+      balance: 0, // Computed field, not in DB
+      createdAt: account.created_at || new Date().toISOString(),
     }));
   },
 
@@ -29,11 +29,10 @@ export const accountingService = {
     const { data, error } = await supabase
       .from("chart_of_accounts")
       .insert({
-        code: account.code,
-        name_arabic: account.nameArabic,
-        name_english: account.nameEnglish,
-        type: account.type,
-        parent_id: account.parentId,
+        account_code: account.code,
+        account_name: account.nameEnglish, // Storing English name as primary
+        account_type: account.type,
+        parent_account_id: account.parentId,
         is_active: account.isActive,
       })
       .select()
@@ -43,14 +42,14 @@ export const accountingService = {
 
     return {
       id: data.id,
-      code: data.code,
-      nameArabic: data.name_arabic,
-      nameEnglish: data.name_english,
-      type: data.type as ChartOfAccount["type"],
-      parentId: data.parent_id || undefined,
-      isActive: data.is_active,
-      balance: data.balance,
-      createdAt: data.created_at,
+      code: data.account_code,
+      nameArabic: data.account_name,
+      nameEnglish: data.account_name,
+      type: data.account_type as ChartOfAccount["type"],
+      parentId: data.parent_account_id || undefined,
+      isActive: data.is_active || true,
+      balance: 0,
+      createdAt: data.created_at || new Date().toISOString(),
     };
   },
 
@@ -62,7 +61,7 @@ export const accountingService = {
         *,
         lines:journal_entry_lines(
           *,
-          account:chart_of_accounts(code, name_english, name_arabic)
+          account:chart_of_accounts(id, account_code, account_name)
         )
       `)
       .order("created_at", { ascending: false });
@@ -73,25 +72,25 @@ export const accountingService = {
     return (data || []).map(entry => ({
       id: entry.id,
       entryNumber: entry.entry_number,
-      date: entry.date,
-      description: entry.description,
-      status: entry.status as JournalEntry["status"],
+      date: entry.entry_date,
+      description: entry.description || "",
+      status: "posted" as JournalEntry["status"], // Default to posted
       totalDebit: entry.total_debit,
       totalCredit: entry.total_credit,
+      createdAt: entry.created_at || new Date().toISOString(),
       lines: Array.isArray(entry.lines) ? entry.lines.map((line: any) => ({
         id: line.id,
         accountId: line.account_id,
         account: line.account ? {
-          id: line.account_id,
-          code: line.account.code,
-          nameEnglish: line.account.name_english,
-          nameArabic: line.account.name_arabic,
+          id: line.account.id,
+          code: line.account.account_code,
+          nameEnglish: line.account.account_name,
+          nameArabic: line.account.account_name,
         } : undefined,
-        description: line.description,
+        description: line.description || "",
         debit: line.debit,
         credit: line.credit,
       })) : [],
-      createdAt: entry.created_at,
     }));
   },
 
@@ -101,11 +100,11 @@ export const accountingService = {
       .from("journal_entries")
       .insert({
         entry_number: entry.entryNumber,
-        date: entry.date,
+        entry_date: entry.date,
         description: entry.description,
-        status: entry.status,
         total_debit: entry.totalDebit,
         total_credit: entry.totalCredit,
+        is_balanced: entry.totalDebit === entry.totalCredit,
       })
       .select()
       .single();
@@ -134,7 +133,7 @@ export const accountingService = {
         *,
         lines:journal_entry_lines(
           *,
-          account:chart_of_accounts(code, name_english, name_arabic)
+          account:chart_of_accounts(id, account_code, account_name)
         )
       `)
       .eq("id", entryData.id)
@@ -145,25 +144,25 @@ export const accountingService = {
     return {
       id: completeEntry.id,
       entryNumber: completeEntry.entry_number,
-      date: completeEntry.date,
-      description: completeEntry.description,
-      status: completeEntry.status as JournalEntry["status"],
+      date: completeEntry.entry_date,
+      description: completeEntry.description || "",
+      status: "posted" as JournalEntry["status"],
       totalDebit: completeEntry.total_debit,
       totalCredit: completeEntry.total_credit,
+      createdAt: completeEntry.created_at || new Date().toISOString(),
       lines: Array.isArray(completeEntry.lines) ? completeEntry.lines.map((line: any) => ({
         id: line.id,
         accountId: line.account_id,
         account: line.account ? {
-          id: line.account_id,
-          code: line.account.code,
-          nameEnglish: line.account.name_english,
-          nameArabic: line.account.name_arabic,
+          id: line.account.id,
+          code: line.account.account_code,
+          nameEnglish: line.account.account_name,
+          nameArabic: line.account.account_name,
         } : undefined,
-        description: line.description,
+        description: line.description || "",
         debit: line.debit,
         credit: line.credit,
       })) : [],
-      createdAt: completeEntry.created_at,
     };
   },
 

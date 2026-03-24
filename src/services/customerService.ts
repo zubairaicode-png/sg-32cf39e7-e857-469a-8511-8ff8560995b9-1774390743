@@ -13,25 +13,25 @@ export const customerService = {
 
     return (data || []).map(customer => ({
       id: customer.id,
-      code: customer.code,
+      code: customer.customer_code,
       nameArabic: customer.name_arabic,
       nameEnglish: customer.name_english,
       vatNumber: customer.vat_number || undefined,
-      commercialRegister: customer.commercial_register || undefined,
+      commercialRegister: customer.commercial_registration || undefined,
       email: customer.email || undefined,
       phone: customer.phone || undefined,
-      mobile: customer.mobile || undefined,
-      buildingNumber: customer.building_number,
-      streetName: customer.street_name,
-      district: customer.district,
-      city: customer.city,
-      postalCode: customer.postal_code,
-      country: customer.country,
-      creditLimit: customer.credit_limit,
-      paymentTerms: customer.payment_terms,
-      balance: customer.balance,
-      isActive: customer.is_active,
-      createdAt: customer.created_at,
+      mobile: customer.mobile_number || undefined,
+      buildingNumber: customer.building_number || "",
+      streetName: customer.street_name || "",
+      district: customer.district || "",
+      city: customer.city || "",
+      postalCode: customer.postal_code || "",
+      country: customer.country || "",
+      creditLimit: customer.credit_limit || 0,
+      paymentTerms: customer.payment_term || "",
+      balance: customer.current_balance || 0,
+      isActive: customer.is_active || true,
+      createdAt: customer.created_at || new Date().toISOString(),
     }));
   },
 
@@ -47,25 +47,25 @@ export const customerService = {
 
     return {
       id: data.id,
-      code: data.code,
+      code: data.customer_code,
       nameArabic: data.name_arabic,
       nameEnglish: data.name_english,
       vatNumber: data.vat_number || undefined,
-      commercialRegister: data.commercial_register || undefined,
+      commercialRegister: data.commercial_registration || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
-      mobile: data.mobile || undefined,
-      buildingNumber: data.building_number,
-      streetName: data.street_name,
-      district: data.district,
-      city: data.city,
-      postalCode: data.postal_code,
-      country: data.country,
-      creditLimit: data.credit_limit,
-      paymentTerms: data.payment_terms,
-      balance: data.balance,
-      isActive: data.is_active,
-      createdAt: data.created_at,
+      mobile: data.mobile_number || undefined,
+      buildingNumber: data.building_number || "",
+      streetName: data.street_name || "",
+      district: data.district || "",
+      city: data.city || "",
+      postalCode: data.postal_code || "",
+      country: data.country || "",
+      creditLimit: data.credit_limit || 0,
+      paymentTerms: data.payment_term || "",
+      balance: data.current_balance || 0,
+      isActive: data.is_active || true,
+      createdAt: data.created_at || new Date().toISOString(),
     };
   },
 
@@ -73,14 +73,14 @@ export const customerService = {
     const { data, error } = await supabase
       .from("customers")
       .insert({
-        code: customer.code,
+        customer_code: customer.code,
         name_arabic: customer.nameArabic,
         name_english: customer.nameEnglish,
         vat_number: customer.vatNumber,
-        commercial_register: customer.commercialRegister,
+        commercial_registration: customer.commercialRegister,
         email: customer.email,
         phone: customer.phone,
-        mobile: customer.mobile,
+        mobile_number: customer.mobile,
         building_number: customer.buildingNumber,
         street_name: customer.streetName,
         district: customer.district,
@@ -88,7 +88,7 @@ export const customerService = {
         postal_code: customer.postalCode,
         country: customer.country,
         credit_limit: customer.creditLimit,
-        payment_terms: customer.paymentTerms,
+        payment_term: customer.paymentTerms,
         is_active: customer.isActive,
       })
       .select()
@@ -98,38 +98,38 @@ export const customerService = {
 
     return {
       id: data.id,
-      code: data.code,
+      code: data.customer_code,
       nameArabic: data.name_arabic,
       nameEnglish: data.name_english,
       vatNumber: data.vat_number || undefined,
-      commercialRegister: data.commercial_register || undefined,
+      commercialRegister: data.commercial_registration || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
-      mobile: data.mobile || undefined,
-      buildingNumber: data.building_number,
-      streetName: data.street_name,
-      district: data.district,
-      city: data.city,
-      postalCode: data.postal_code,
-      country: data.country,
-      creditLimit: data.credit_limit,
-      paymentTerms: data.payment_terms,
-      balance: data.balance,
-      isActive: data.is_active,
-      createdAt: data.created_at,
+      mobile: data.mobile_number || undefined,
+      buildingNumber: data.building_number || "",
+      streetName: data.street_name || "",
+      district: data.district || "",
+      city: data.city || "",
+      postalCode: data.postal_code || "",
+      country: data.country || "",
+      creditLimit: data.credit_limit || 0,
+      paymentTerms: data.payment_term || "",
+      balance: data.current_balance || 0,
+      isActive: data.is_active || true,
+      createdAt: data.created_at || new Date().toISOString(),
     };
   },
 
   async update(id: string, updates: Partial<Omit<Customer, "id" | "createdAt" | "balance">>): Promise<Customer> {
     const updateData: any = {};
-    if (updates.code) updateData.code = updates.code;
+    if (updates.code) updateData.customer_code = updates.code;
     if (updates.nameArabic) updateData.name_arabic = updates.nameArabic;
     if (updates.nameEnglish) updateData.name_english = updates.nameEnglish;
     if (updates.vatNumber) updateData.vat_number = updates.vatNumber;
-    if (updates.commercialRegister) updateData.commercial_register = updates.commercialRegister;
+    if (updates.commercialRegister) updateData.commercial_registration = updates.commercialRegister;
     if (updates.email) updateData.email = updates.email;
     if (updates.phone) updateData.phone = updates.phone;
-    if (updates.mobile) updateData.mobile = updates.mobile;
+    if (updates.mobile) updateData.mobile_number = updates.mobile;
     if (updates.buildingNumber) updateData.building_number = updates.buildingNumber;
     if (updates.streetName) updateData.street_name = updates.streetName;
     if (updates.district) updateData.district = updates.district;
@@ -137,7 +137,7 @@ export const customerService = {
     if (updates.postalCode) updateData.postal_code = updates.postalCode;
     if (updates.country) updateData.country = updates.country;
     if (updates.creditLimit !== undefined) updateData.credit_limit = updates.creditLimit;
-    if (updates.paymentTerms) updateData.payment_terms = updates.paymentTerms;
+    if (updates.paymentTerms) updateData.payment_term = updates.paymentTerms;
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
 
     const { data, error } = await supabase
@@ -151,25 +151,25 @@ export const customerService = {
 
     return {
       id: data.id,
-      code: data.code,
+      code: data.customer_code,
       nameArabic: data.name_arabic,
       nameEnglish: data.name_english,
       vatNumber: data.vat_number || undefined,
-      commercialRegister: data.commercial_register || undefined,
+      commercialRegister: data.commercial_registration || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
-      mobile: data.mobile || undefined,
-      buildingNumber: data.building_number,
-      streetName: data.street_name,
-      district: data.district,
-      city: data.city,
-      postalCode: data.postal_code,
-      country: data.country,
-      creditLimit: data.credit_limit,
-      paymentTerms: data.payment_terms,
-      balance: data.balance,
-      isActive: data.is_active,
-      createdAt: data.created_at,
+      mobile: data.mobile_number || undefined,
+      buildingNumber: data.building_number || "",
+      streetName: data.street_name || "",
+      district: data.district || "",
+      city: data.city || "",
+      postalCode: data.postal_code || "",
+      country: data.country || "",
+      creditLimit: data.credit_limit || 0,
+      paymentTerms: data.payment_term || "",
+      balance: data.current_balance || 0,
+      isActive: data.is_active || true,
+      createdAt: data.created_at || new Date().toISOString(),
     };
   },
 

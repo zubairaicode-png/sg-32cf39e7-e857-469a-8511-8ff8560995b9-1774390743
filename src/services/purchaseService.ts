@@ -7,7 +7,7 @@ export const purchaseService = {
       .from("purchase_invoices")
       .select(`
         *,
-        supplier:suppliers(id, code, name_english, name_arabic),
+        supplier:suppliers(id, supplier_code, name_english, name_arabic),
         items:purchase_invoice_items(*)
       `)
       .order("created_at", { ascending: false });
@@ -19,19 +19,16 @@ export const purchaseService = {
       id: invoice.id,
       invoiceNumber: invoice.invoice_number,
       supplierId: invoice.supplier_id,
-      supplier: invoice.supplier ? {
-        id: invoice.supplier.id,
-        code: invoice.supplier.code,
-        nameEnglish: invoice.supplier.name_english,
-        nameArabic: invoice.supplier.name_arabic,
-      } : undefined,
-      date: invoice.date,
-      dueDate: invoice.due_date,
+      supplierName: invoice.supplier?.name_english || "",
+      invoiceDate: invoice.invoice_date,
+      dueDate: invoice.due_date || "",
       subtotal: invoice.subtotal,
-      vatAmount: invoice.vat_amount,
-      total: invoice.total,
+      vatAmount: invoice.vat_amount || 0,
+      totalAmount: invoice.total_amount,
       status: invoice.status as PurchaseInvoice["status"],
       notes: invoice.notes || undefined,
+      createdBy: invoice.created_by || "",
+      createdAt: invoice.created_at || new Date().toISOString(),
       items: Array.isArray(invoice.items) ? invoice.items.map((item: any) => ({
         id: item.id,
         itemName: item.item_name,
@@ -39,10 +36,9 @@ export const purchaseService = {
         quantity: item.quantity,
         unitPrice: item.unit_price,
         vatRate: item.vat_rate,
-        vatAmount: item.vat_amount,
-        total: item.total,
+        vatAmount: item.vat_amount || 0,
+        total: item.total_amount,
       })) : [],
-      createdAt: invoice.created_at,
     }));
   },
 
@@ -51,7 +47,7 @@ export const purchaseService = {
       .from("purchase_invoices")
       .select(`
         *,
-        supplier:suppliers(id, code, name_english, name_arabic),
+        supplier:suppliers(id, supplier_code, name_english, name_arabic),
         items:purchase_invoice_items(*)
       `)
       .eq("id", id)
@@ -64,19 +60,16 @@ export const purchaseService = {
       id: data.id,
       invoiceNumber: data.invoice_number,
       supplierId: data.supplier_id,
-      supplier: data.supplier ? {
-        id: data.supplier.id,
-        code: data.supplier.code,
-        nameEnglish: data.supplier.name_english,
-        nameArabic: data.supplier.name_arabic,
-      } : undefined,
-      date: data.date,
-      dueDate: data.due_date,
+      supplierName: data.supplier?.name_english || "",
+      invoiceDate: data.invoice_date,
+      dueDate: data.due_date || "",
       subtotal: data.subtotal,
-      vatAmount: data.vat_amount,
-      total: data.total,
+      vatAmount: data.vat_amount || 0,
+      totalAmount: data.total_amount,
       status: data.status as PurchaseInvoice["status"],
       notes: data.notes || undefined,
+      createdBy: data.created_by || "",
+      createdAt: data.created_at || new Date().toISOString(),
       items: Array.isArray(data.items) ? data.items.map((item: any) => ({
         id: item.id,
         itemName: item.item_name,
@@ -84,25 +77,24 @@ export const purchaseService = {
         quantity: item.quantity,
         unitPrice: item.unit_price,
         vatRate: item.vat_rate,
-        vatAmount: item.vat_amount,
-        total: item.total,
+        vatAmount: item.vat_amount || 0,
+        total: item.total_amount,
       })) : [],
-      createdAt: data.created_at,
     };
   },
 
-  async create(invoice: Omit<PurchaseInvoice, "id" | "createdAt" | "supplier">, items: Omit<PurchaseInvoiceItem, "id">[]): Promise<PurchaseInvoice> {
+  async create(invoice: Omit<PurchaseInvoice, "id" | "createdAt">, items: Omit<PurchaseInvoiceItem, "id">[]): Promise<PurchaseInvoice> {
     // Insert invoice
     const { data: invoiceData, error: invoiceError } = await supabase
       .from("purchase_invoices")
       .insert({
         invoice_number: invoice.invoiceNumber,
         supplier_id: invoice.supplierId,
-        date: invoice.date,
+        invoice_date: invoice.invoiceDate,
         due_date: invoice.dueDate,
         subtotal: invoice.subtotal,
         vat_amount: invoice.vatAmount,
-        total: invoice.total,
+        total_amount: invoice.totalAmount,
         status: invoice.status,
         notes: invoice.notes,
       })
@@ -120,7 +112,7 @@ export const purchaseService = {
       unit_price: item.unitPrice,
       vat_rate: item.vatRate,
       vat_amount: item.vatAmount,
-      total: item.total,
+      total_amount: item.total,
     }));
 
     const { error: itemsError } = await supabase

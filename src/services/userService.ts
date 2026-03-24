@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@/types";
+import { crypto } from "crypto";
 
 export const userService = {
   async getAll(): Promise<User[]> {
@@ -48,9 +49,13 @@ export const userService = {
   },
 
   async create(user: Omit<User, "id" | "createdAt">): Promise<User> {
+    // Generate UUID if we need it for users table not handled by auth
+    const tempId = crypto.randomUUID();
+    
     const { data, error } = await supabase
       .from("users")
       .insert({
+        id: tempId,
         username: user.username,
         email: user.email,
         full_name: user.fullName,
