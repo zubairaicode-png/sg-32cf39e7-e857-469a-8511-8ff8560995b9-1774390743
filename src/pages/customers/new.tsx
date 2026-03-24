@@ -10,13 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
-import { customerService } from "@/services/customerService";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function NewCustomerPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     customerCode: "",
@@ -35,97 +33,69 @@ export default function NewCustomerPage() {
     phone: "",
     contactPerson: "",
     creditLimit: "",
-    paymentTerms: "net30" as "cash" | "net15" | "net30" | "net60" | "net90",
+    paymentTerms: "net30",
     isActive: true,
   });
 
-  // Direct test function that bypasses form submission
-  const testDatabaseConnection = async () => {
-    console.log("=== DIRECT DATABASE TEST ===");
-    console.log("Current user:", user);
-    
-    if (!user) {
-      alert("❌ ERROR: Not logged in! User object is null.");
-      return;
-    }
-
-    alert("✅ User authenticated: " + user.username);
-
-    try {
-      const testData = {
-        code: "TEST-" + Date.now(),
-        nameEnglish: "Test Customer",
-        nameArabic: "عميل تجريبي",
-        city: "Riyadh",
-        country: "SA",
-        creditLimit: 0,
-        paymentTerms: "net30" as const,
-        isActive: true,
-      };
-
-      console.log("Calling customerService.create with test data:", testData);
-      alert("⏳ Sending to database...");
-
-      const result = await customerService.create(testData);
-
-      console.log("✅ SUCCESS! Customer created:", result);
-      alert("✅ SUCCESS! Customer created with code: " + result.code);
-
-      toast({
-        title: "Success!",
-        description: "Test customer created successfully",
-      });
-
-      router.push("/customers");
-    } catch (error) {
-      console.error("❌ ERROR:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      alert("❌ ERROR: " + errorMessage);
-      
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
+  const handleChange = (field: string, value: string | boolean) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted!");
-    
-    if (!user) {
-      toast({
-        title: "Authentication Error",
-        description: "You must be logged in to create customers.",
-        variant: "destructive",
-      });
+
+    if (!formData.customerCode.trim()) {
+      toast({ title: "Validation Error", description: "Customer Code is required.", variant: "destructive" });
+      return;
+    }
+    if (!formData.nameEnglish.trim()) {
+      toast({ title: "Validation Error", description: "English Name is required.", variant: "destructive" });
+      return;
+    }
+    if (!formData.city.trim()) {
+      toast({ title: "Validation Error", description: "City is required.", variant: "destructive" });
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const customerData = {
-        code: formData.customerCode,
-        nameEnglish: formData.nameEnglish,
-        nameArabic: formData.nameArabic,
-        vatNumber: formData.vatNumber || undefined,
-        commercialRegister: formData.crNumber || undefined,
-        email: formData.email || undefined,
-        phone: formData.phone || undefined,
-        buildingNumber: formData.buildingNumber,
-        streetName: formData.streetName,
-        district: formData.district,
-        city: formData.city,
-        postalCode: formData.postalCode,
-        country: formData.countryCode,
-        creditLimit: parseFloat(formData.creditLimit) || 0,
-        paymentTerms: formData.paymentTerms,
-        isActive: formData.isActive,
+      const insertData = {
+        customer_code: formData.customerCode.trim(),
+        name_english: formData.nameEnglish.trim(),
+        name_arabic: formData.nameArabic.trim() || null,
+        vat_number: formData.vatNumber.trim() || null,
+        commercial_registration: formData.crNumber.trim() || null,
+        email: formData.email.trim() || null,
+        phone: formData.phone.trim() || null,
+        building_number: formData.buildingNumber.trim() || null,
+        street_name: formData.streetName.trim() || null,
+        district: formData.district.trim() || null,
+        city: formData.city.trim(),
+        postal_code: formData.postalCode.trim() || null,
+        country: "Saudi Arabia",
+        credit_limit: parseFloat(formData.creditLimit) || 0,
+        payment_term: formData.paymentTerms,
+        is_active: formData.isActive,
+        current_balance: 0,
+        opening_balance: 0,
       };
 
-      const result = await customerService.create(customerData);
+      const { data, error } = await supabase
+        .from("customers")
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Supabase insert error:", error);
+        toast({
+          title: "Database Error",
+          description: error.message || "Failed to save customer.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Customer Created",
@@ -133,46 +103,30 @@ export default function NewCustomerPage() {
       });
 
       router.push("/customers");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create customer",
-        variant: "destructive",
-      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error occurred";
+      console.error("Unexpected error:", err);
+      toast({ title: "Error", description: msg, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
   return (
     <>
-      <SEO title="Add Customer - Maka ERP System" />
+      <SEO title="Add Customer - Maka ERP" />
       <DashboardLayout>
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header */}
           <div className="flex items-center gap-4">
             <Link href="/customers">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
-            <div className="flex-1">
+            <div>
               <h1 className="text-3xl font-bold text-foreground">Add New Customer</h1>
               <p className="text-muted-foreground mt-1">Register a new customer in the system</p>
             </div>
-            {/* TEST BUTTON - Remove after testing */}
-            <Button 
-              type="button" 
-              onClick={testDatabaseConnection}
-              variant="outline"
-              className="bg-yellow-100 hover:bg-yellow-200 border-yellow-400"
-            >
-              🧪 Test Database
-            </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -187,16 +141,17 @@ export default function NewCustomerPage() {
                     <Label htmlFor="customerCode">Customer Code *</Label>
                     <Input
                       id="customerCode"
+                      name="customerCode"
                       placeholder="CUST-001"
                       value={formData.customerCode}
                       onChange={(e) => handleChange("customerCode", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="vatNumber">VAT Number</Label>
                     <Input
                       id="vatNumber"
+                      name="vatNumber"
                       placeholder="300075588900003"
                       value={formData.vatNumber}
                       onChange={(e) => handleChange("vatNumber", e.target.value)}
@@ -209,29 +164,30 @@ export default function NewCustomerPage() {
                     <Label htmlFor="nameEnglish">Name (English) *</Label>
                     <Input
                       id="nameEnglish"
+                      name="nameEnglish"
                       placeholder="Company Name Ltd."
                       value={formData.nameEnglish}
                       onChange={(e) => handleChange("nameEnglish", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="nameArabic">Name (Arabic) *</Label>
+                    <Label htmlFor="nameArabic">Name (Arabic)</Label>
                     <Input
                       id="nameArabic"
+                      name="nameArabic"
                       placeholder="اسم الشركة"
                       value={formData.nameArabic}
                       onChange={(e) => handleChange("nameArabic", e.target.value)}
                       dir="rtl"
-                      required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="crNumber">CR Number</Label>
+                  <Label htmlFor="crNumber">CR Number (Commercial Registration)</Label>
                   <Input
                     id="crNumber"
+                    name="crNumber"
                     placeholder="1010123456"
                     value={formData.crNumber}
                     onChange={(e) => handleChange("crNumber", e.target.value)}
@@ -243,7 +199,7 @@ export default function NewCustomerPage() {
             {/* Address Information */}
             <Card>
               <CardHeader>
-                <CardTitle>Address Information</CardTitle>
+                <CardTitle>Address Information (As per Saudi Arabia ZATCA Requirements)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
@@ -251,6 +207,7 @@ export default function NewCustomerPage() {
                     <Label htmlFor="buildingNumber">Building Number</Label>
                     <Input
                       id="buildingNumber"
+                      name="buildingNumber"
                       placeholder="1234"
                       value={formData.buildingNumber}
                       onChange={(e) => handleChange("buildingNumber", e.target.value)}
@@ -260,6 +217,7 @@ export default function NewCustomerPage() {
                     <Label htmlFor="additionalNumber">Additional Number</Label>
                     <Input
                       id="additionalNumber"
+                      name="additionalNumber"
                       placeholder="5678"
                       value={formData.additionalNumber}
                       onChange={(e) => handleChange("additionalNumber", e.target.value)}
@@ -269,6 +227,7 @@ export default function NewCustomerPage() {
                     <Label htmlFor="postalCode">Postal Code</Label>
                     <Input
                       id="postalCode"
+                      name="postalCode"
                       placeholder="12345"
                       value={formData.postalCode}
                       onChange={(e) => handleChange("postalCode", e.target.value)}
@@ -280,6 +239,7 @@ export default function NewCustomerPage() {
                   <Label htmlFor="streetName">Street Name</Label>
                   <Input
                     id="streetName"
+                    name="streetName"
                     placeholder="King Fahd Road"
                     value={formData.streetName}
                     onChange={(e) => handleChange("streetName", e.target.value)}
@@ -291,6 +251,7 @@ export default function NewCustomerPage() {
                     <Label htmlFor="district">District</Label>
                     <Input
                       id="district"
+                      name="district"
                       placeholder="Al Olaya"
                       value={formData.district}
                       onChange={(e) => handleChange("district", e.target.value)}
@@ -300,19 +261,15 @@ export default function NewCustomerPage() {
                     <Label htmlFor="city">City *</Label>
                     <Input
                       id="city"
+                      name="city"
                       placeholder="Riyadh"
                       value={formData.city}
                       onChange={(e) => handleChange("city", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="countryCode">Country Code *</Label>
-                    <Input
-                      id="countryCode"
-                      value={formData.countryCode}
-                      disabled
-                    />
+                    <Label>Country</Label>
+                    <Input value="Saudi Arabia" disabled />
                   </div>
                 </div>
               </CardContent>
@@ -329,6 +286,7 @@ export default function NewCustomerPage() {
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
+                      name="email"
                       type="email"
                       placeholder="info@company.sa"
                       value={formData.email}
@@ -339,17 +297,18 @@ export default function NewCustomerPage() {
                     <Label htmlFor="phone">Phone</Label>
                     <Input
                       id="phone"
+                      name="phone"
                       placeholder="+966501234567"
                       value={formData.phone}
                       onChange={(e) => handleChange("phone", e.target.value)}
                     />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="contactPerson">Contact Person</Label>
                   <Input
                     id="contactPerson"
+                    name="contactPerson"
                     placeholder="Ahmed Mohammed"
                     value={formData.contactPerson}
                     onChange={(e) => handleChange("contactPerson", e.target.value)}
@@ -369,7 +328,9 @@ export default function NewCustomerPage() {
                     <Label htmlFor="creditLimit">Credit Limit (SAR)</Label>
                     <Input
                       id="creditLimit"
+                      name="creditLimit"
                       type="number"
+                      min="0"
                       placeholder="0"
                       value={formData.creditLimit}
                       onChange={(e) => handleChange("creditLimit", e.target.value)}
@@ -379,10 +340,10 @@ export default function NewCustomerPage() {
                     <Label htmlFor="paymentTerms">Payment Terms *</Label>
                     <select
                       id="paymentTerms"
+                      name="paymentTerms"
                       value={formData.paymentTerms}
                       onChange={(e) => handleChange("paymentTerms", e.target.value)}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      required
                     >
                       <option value="cash">Cash</option>
                       <option value="net15">Net 15 Days</option>
@@ -407,9 +368,8 @@ export default function NewCustomerPage() {
               </CardContent>
             </Card>
 
-            {/* Actions */}
-            <div className="flex items-center gap-4">
-              <Button type="submit" disabled={isLoading} className="gap-2">
+            <div className="flex items-center gap-4 pb-8">
+              <Button type="submit" disabled={isLoading} className="gap-2 min-w-[140px]">
                 <Save className="w-4 h-4" />
                 {isLoading ? "Saving..." : "Save Customer"}
               </Button>
