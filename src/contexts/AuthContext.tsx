@@ -62,15 +62,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const checkSession = async () => {
+    console.log("=== CHECKING SUPABASE SESSION ===");
     const { data: { session } } = await supabase.auth.getSession();
+    console.log("Current session:", session);
     
     if (session?.user) {
+      console.log("Session user found:", session.user.email);
       // Fetch user details from users table
       const { data: userData } = await supabase
         .from("users")
         .select("*")
         .eq("email", session.user.email)
         .single();
+
+      console.log("User data from database:", userData);
 
       if (userData) {
         setUser({
@@ -84,21 +89,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           createdAt: userData.created_at,
         });
         setIsAuthenticated(true);
+        console.log("User authenticated successfully");
       }
+    } else {
+      console.log("No active session found");
     }
   };
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
+      console.log("=== LOGIN ATTEMPT ===");
+      console.log("Username:", username);
+      
       // Check if it's a demo user
       const demoUser = DEMO_USERS[username];
       
       if (demoUser && password === demoUser.password) {
+        console.log("Demo user found, attempting Supabase auth...");
+        
         // Sign in with demo user credentials
         const { data, error } = await supabase.auth.signInWithPassword({
           email: demoUser.email,
           password: demoUser.password,
         });
+
+        console.log("Sign in response:", { data, error });
 
         if (error) {
           // If demo user doesn't exist in auth, create them

@@ -93,6 +93,7 @@ export const customerService = {
       is_active: customer.isActive,
     };
 
+    console.log("=== CUSTOMER SERVICE DEBUG ===");
     console.log("Attempting to insert customer into Supabase:", insertData);
 
     const { data, error } = await supabase
@@ -101,10 +102,14 @@ export const customerService = {
       .select()
       .single();
 
+    console.log("Supabase Response:", { data, error });
+
     if (error) {
       console.error("Supabase Error creating customer:", error);
       throw error;
     }
+
+    console.log("Customer created successfully:", data);
 
     return {
       id: data.id,
