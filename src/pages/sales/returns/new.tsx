@@ -24,7 +24,7 @@ export default function NewSalesReturnPage() {
     reason: "",
   });
   const [items, setItems] = useState<InvoiceItem[]>([
-    { id: "1", description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
+    { id: "1", itemName: "", description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
   ]);
 
   const calculateLineItem = (item: InvoiceItem): InvoiceItem => {
@@ -44,7 +44,7 @@ export default function NewSalesReturnPage() {
   const addItem = () => {
     setItems([
       ...items,
-      { id: Date.now().toString(), description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
+      { id: Date.now().toString(), itemName: "", description: "", quantity: 1, unitPrice: 0, vatRate: 15, vatAmount: 0, totalAmount: 0 },
     ]);
   };
 

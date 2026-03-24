@@ -27,15 +27,16 @@ export default function CustomerLedgerPage() {
 
   useEffect(() => {
     if (id) {
+      const customerId = Array.isArray(id) ? id[0] : id;
       const fetchData = async () => {
         try {
-          const customerData = await customerService.getById(id as string);
+          const customerData = await customerService.getById(customerId);
           setCustomer(customerData);
 
           const { data: ledgerData, error } = await supabase
             .from('ledger_entries')
             .select('*')
-            .eq('customer_id', id)
+            .eq('customer_id', customerId)
             .order('entry_date', { ascending: true });
 
           if (!error && ledgerData) {

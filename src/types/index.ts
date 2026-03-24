@@ -133,6 +133,7 @@ export interface SalesInvoice {
   vatAmount: number;
   totalAmount: number;
   status: "draft" | "issued" | "paid" | "cancelled";
+  zatcaStatus?: string;
   zatcaUUID?: string;
   zatcaHash?: string;
   qrCode?: string;

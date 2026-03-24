@@ -33,7 +33,7 @@ export default function PurchasesPage() {
         subtotal: 30000,
         vatAmount: 4500,
         totalAmount: 34500,
-        status: "received",
+        status: "issued",
         createdBy: "admin",
         createdAt: "2024-03-24T10:00:00Z",
       },

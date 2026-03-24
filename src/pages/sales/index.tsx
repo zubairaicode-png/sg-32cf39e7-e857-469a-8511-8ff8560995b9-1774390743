@@ -95,7 +95,7 @@ export default function SalesPage() {
                       <TableCell className="text-right font-semibold">{inv.totalAmount.toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={inv.zatcaStatus === 'approved' ? 'text-success border-success' : ''}>
-                          {inv.zatcaStatus?.replace('_', ' ').toUpperCase()}
+                          {inv.zatcaStatus?.replace('_', ' ').toUpperCase() || 'N/A'}
                         </Badge>
                       </TableCell>
                       <TableCell>

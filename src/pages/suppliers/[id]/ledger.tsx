@@ -20,15 +20,16 @@ export default function SupplierLedgerPage() {
 
   useEffect(() => {
     if (id) {
+      const supplierId = Array.isArray(id) ? id[0] : id;
       const fetchData = async () => {
         try {
-          const supplierData = await supplierService.getById(id as string);
+          const supplierData = await supplierService.getById(supplierId);
           setSupplier(supplierData);
 
           const { data: ledgerData, error } = await supabase
             .from('ledger_entries')
             .select('*')
-            .eq('supplier_id', id)
+            .eq('supplier_id', supplierId)
             .order('entry_date', { ascending: true });
 
           if (!error && ledgerData) {
@@ -114,11 +115,11 @@ export default function SupplierLedgerPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Payment Terms</p>
-                  <p className="font-semibold">{supplier.paymentTerms} days</p>
+                  <p className="font-semibold">{supplier.paymentTerms}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Contact</p>
-                  <p className="font-semibold">{supplier.contactPerson}</p>
+                  <p className="font-semibold">{supplier.phone || supplier.email || 'N/A'}</p>
                 </div>
               </div>
             </CardContent>

@@ -90,6 +90,7 @@ export default function NewSalesInvoicePage() {
         vatAmount: totalVat,
         totalAmount: grandTotal,
         status: "draft",
+        items: [],
         notes: "",
         createdBy: user?.id || "system",
       }, items.map(item => ({
