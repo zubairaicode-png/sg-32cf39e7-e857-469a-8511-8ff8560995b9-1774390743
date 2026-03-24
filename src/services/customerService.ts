@@ -1,44 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Customer } from "@/types";
 
-async function resolveCreatedBy(): Promise<string | null> {
-  try {
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-
-    if (!authUser) return null;
-
-    const { data: existingUser } = await supabase
-      .from("users")
-      .select("id")
-      .eq("id", authUser.id)
-      .maybeSingle();
-
-    if (existingUser) return existingUser.id;
-
-    const { error: insertError } = await supabase.from("users").insert({
-      id: authUser.id,
-      username: authUser.email?.split("@")[0] || "user",
-      email: authUser.email || "",
-      full_name: authUser.user_metadata?.full_name || authUser.email || "User",
-      role: "admin",
-      permissions: [],
-      is_active: true,
-    });
-
-    if (insertError) {
-      console.warn("Could not insert users record:", insertError.message);
-      return null;
-    }
-
-    return authUser.id;
-  } catch (err) {
-    console.warn("resolveCreatedBy error:", err);
-    return null;
-  }
-}
-
 function mapRow(row: Record<string, unknown>): Customer {
   return {
     id: row.id as string,
@@ -91,14 +53,11 @@ export const customerService = {
     }
 
     if (!data) return null;
-
     return mapRow(data as Record<string, unknown>);
   },
 
   async create(customer: Omit<Customer, "id" | "createdAt" | "balance">): Promise<Customer> {
-    const createdBy = await resolveCreatedBy();
-
-    const insertData: Record<string, unknown> = {
+    const insertData = {
       customer_code: customer.code,
       name_english: customer.nameEnglish,
       name_arabic: customer.nameArabic || null,
@@ -115,21 +74,15 @@ export const customerService = {
       credit_limit: customer.creditLimit ?? 0,
       payment_term: customer.paymentTerms || "net30",
       is_active: customer.isActive ?? true,
+      opening_balance: 0,
+      current_balance: 0,
     };
-
-    if (createdBy) {
-      insertData.created_by = createdBy;
-    }
-
-    console.log("Inserting customer:", insertData);
 
     const { data, error } = await supabase
       .from("customers")
       .insert(insertData)
       .select()
       .single();
-
-    console.log("Insert result:", { data, error });
 
     if (error) {
       console.error("Error creating customer:", error);

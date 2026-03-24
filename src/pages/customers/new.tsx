@@ -75,7 +75,7 @@ export default function NewCustomerPage() {
         postal_code: formData.postalCode.trim() || null,
         country: "Saudi Arabia",
         credit_limit: parseFloat(formData.creditLimit) || 0,
-        payment_term: formData.paymentTerms,
+        payment_term: formData.paymentTerms as "cash" | "net15" | "net30" | "net60" | "net90",
         is_active: formData.isActive,
         current_balance: 0,
         opening_balance: 0,
@@ -96,6 +96,8 @@ export default function NewCustomerPage() {
         });
         return;
       }
+
+      console.log("Customer created successfully:", data);
 
       toast({
         title: "Customer Created",
@@ -141,7 +143,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="customerCode">Customer Code *</Label>
                     <Input
                       id="customerCode"
-                      name="customerCode"
                       placeholder="CUST-001"
                       value={formData.customerCode}
                       onChange={(e) => handleChange("customerCode", e.target.value)}
@@ -151,7 +152,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="vatNumber">VAT Number</Label>
                     <Input
                       id="vatNumber"
-                      name="vatNumber"
                       placeholder="300075588900003"
                       value={formData.vatNumber}
                       onChange={(e) => handleChange("vatNumber", e.target.value)}
@@ -164,7 +164,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="nameEnglish">Name (English) *</Label>
                     <Input
                       id="nameEnglish"
-                      name="nameEnglish"
                       placeholder="Company Name Ltd."
                       value={formData.nameEnglish}
                       onChange={(e) => handleChange("nameEnglish", e.target.value)}
@@ -174,7 +173,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="nameArabic">Name (Arabic)</Label>
                     <Input
                       id="nameArabic"
-                      name="nameArabic"
                       placeholder="اسم الشركة"
                       value={formData.nameArabic}
                       onChange={(e) => handleChange("nameArabic", e.target.value)}
@@ -187,7 +185,6 @@ export default function NewCustomerPage() {
                   <Label htmlFor="crNumber">CR Number (Commercial Registration)</Label>
                   <Input
                     id="crNumber"
-                    name="crNumber"
                     placeholder="1010123456"
                     value={formData.crNumber}
                     onChange={(e) => handleChange("crNumber", e.target.value)}
@@ -196,10 +193,10 @@ export default function NewCustomerPage() {
               </CardContent>
             </Card>
 
-            {/* Address Information */}
+            {/* Address */}
             <Card>
               <CardHeader>
-                <CardTitle>Address Information (As per Saudi Arabia ZATCA Requirements)</CardTitle>
+                <CardTitle>Address Information (ZATCA Requirements)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
@@ -207,7 +204,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="buildingNumber">Building Number</Label>
                     <Input
                       id="buildingNumber"
-                      name="buildingNumber"
                       placeholder="1234"
                       value={formData.buildingNumber}
                       onChange={(e) => handleChange("buildingNumber", e.target.value)}
@@ -217,7 +213,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="additionalNumber">Additional Number</Label>
                     <Input
                       id="additionalNumber"
-                      name="additionalNumber"
                       placeholder="5678"
                       value={formData.additionalNumber}
                       onChange={(e) => handleChange("additionalNumber", e.target.value)}
@@ -227,7 +222,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="postalCode">Postal Code</Label>
                     <Input
                       id="postalCode"
-                      name="postalCode"
                       placeholder="12345"
                       value={formData.postalCode}
                       onChange={(e) => handleChange("postalCode", e.target.value)}
@@ -239,7 +233,6 @@ export default function NewCustomerPage() {
                   <Label htmlFor="streetName">Street Name</Label>
                   <Input
                     id="streetName"
-                    name="streetName"
                     placeholder="King Fahd Road"
                     value={formData.streetName}
                     onChange={(e) => handleChange("streetName", e.target.value)}
@@ -251,7 +244,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="district">District</Label>
                     <Input
                       id="district"
-                      name="district"
                       placeholder="Al Olaya"
                       value={formData.district}
                       onChange={(e) => handleChange("district", e.target.value)}
@@ -261,7 +253,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="city">City *</Label>
                     <Input
                       id="city"
-                      name="city"
                       placeholder="Riyadh"
                       value={formData.city}
                       onChange={(e) => handleChange("city", e.target.value)}
@@ -275,7 +266,7 @@ export default function NewCustomerPage() {
               </CardContent>
             </Card>
 
-            {/* Contact Information */}
+            {/* Contact */}
             <Card>
               <CardHeader>
                 <CardTitle>Contact Information</CardTitle>
@@ -286,7 +277,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
-                      name="email"
                       type="email"
                       placeholder="info@company.sa"
                       value={formData.email}
@@ -297,7 +287,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="phone">Phone</Label>
                     <Input
                       id="phone"
-                      name="phone"
                       placeholder="+966501234567"
                       value={formData.phone}
                       onChange={(e) => handleChange("phone", e.target.value)}
@@ -308,7 +297,6 @@ export default function NewCustomerPage() {
                   <Label htmlFor="contactPerson">Contact Person</Label>
                   <Input
                     id="contactPerson"
-                    name="contactPerson"
                     placeholder="Ahmed Mohammed"
                     value={formData.contactPerson}
                     onChange={(e) => handleChange("contactPerson", e.target.value)}
@@ -328,7 +316,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="creditLimit">Credit Limit (SAR)</Label>
                     <Input
                       id="creditLimit"
-                      name="creditLimit"
                       type="number"
                       min="0"
                       placeholder="0"
@@ -340,7 +327,6 @@ export default function NewCustomerPage() {
                     <Label htmlFor="paymentTerms">Payment Terms *</Label>
                     <select
                       id="paymentTerms"
-                      name="paymentTerms"
                       value={formData.paymentTerms}
                       onChange={(e) => handleChange("paymentTerms", e.target.value)}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
