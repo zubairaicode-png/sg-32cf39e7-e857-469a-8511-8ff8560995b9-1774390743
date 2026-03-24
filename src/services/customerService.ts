@@ -1,6 +1,68 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Customer } from "@/types";
 
+async function resolveCreatedBy(): Promise<string | null> {
+  try {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+
+    if (!authUser) return null;
+
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", authUser.id)
+      .maybeSingle();
+
+    if (existingUser) return existingUser.id;
+
+    const { error: insertError } = await supabase.from("users").insert({
+      id: authUser.id,
+      username: authUser.email?.split("@")[0] || "user",
+      email: authUser.email || "",
+      full_name: authUser.user_metadata?.full_name || authUser.email || "User",
+      role: "admin",
+      permissions: [],
+      is_active: true,
+    });
+
+    if (insertError) {
+      console.warn("Could not insert users record:", insertError.message);
+      return null;
+    }
+
+    return authUser.id;
+  } catch (err) {
+    console.warn("resolveCreatedBy error:", err);
+    return null;
+  }
+}
+
+function mapRow(row: Record<string, unknown>): Customer {
+  return {
+    id: row.id as string,
+    code: row.customer_code as string,
+    nameEnglish: row.name_english as string,
+    nameArabic: (row.name_arabic as string) || "",
+    vatNumber: (row.vat_number as string) || undefined,
+    commercialRegister: (row.commercial_registration as string) || undefined,
+    email: (row.email as string) || undefined,
+    phone: (row.phone as string) || undefined,
+    buildingNumber: (row.building_number as string) || "",
+    streetName: (row.street_name as string) || "",
+    district: (row.district as string) || "",
+    city: (row.city as string) || "",
+    postalCode: (row.postal_code as string) || "",
+    country: (row.country as string) || "Saudi Arabia",
+    creditLimit: Number(row.credit_limit) || 0,
+    paymentTerms: (row.payment_term as string) || "net30",
+    balance: Number(row.current_balance) || 0,
+    isActive: row.is_active !== false,
+    createdAt: (row.created_at as string) || new Date().toISOString(),
+  };
+}
+
 export const customerService = {
   async getAll(): Promise<Customer[]> {
     const { data, error } = await supabase
@@ -9,31 +71,11 @@ export const customerService = {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Supabase Error fetching customers:", error);
-      throw error;
+      console.error("Error fetching customers:", error);
+      throw new Error(error.message);
     }
 
-    return (data || []).map((customer) => ({
-      id: customer.id,
-      code: customer.customer_code,
-      nameArabic: customer.name_arabic || "",
-      nameEnglish: customer.name_english,
-      vatNumber: customer.vat_number || undefined,
-      commercialRegister: customer.commercial_registration || undefined,
-      email: customer.email || undefined,
-      phone: customer.phone || undefined,
-      buildingNumber: customer.building_number || "",
-      streetName: customer.street_name || "",
-      district: customer.district || "",
-      city: customer.city || "",
-      postalCode: customer.postal_code || "",
-      country: customer.country || "",
-      creditLimit: Number(customer.credit_limit) || 0,
-      paymentTerms: customer.payment_term || "net30",
-      balance: Number(customer.current_balance) || 0,
-      isActive: customer.is_active ?? true,
-      createdAt: customer.created_at || new Date().toISOString(),
-    }));
+    return (data || []).map((row) => mapRow(row as Record<string, unknown>));
   },
 
   async getById(id: string): Promise<Customer | null> {
@@ -41,83 +83,22 @@ export const customerService = {
       .from("customers")
       .select("*")
       .eq("id", id)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      console.error("Supabase Error fetching customer by ID:", error);
-      throw error;
+      console.error("Error fetching customer by ID:", error);
+      throw new Error(error.message);
     }
 
     if (!data) return null;
 
-    return {
-      id: data.id,
-      code: data.customer_code,
-      nameArabic: data.name_arabic || "",
-      nameEnglish: data.name_english,
-      vatNumber: data.vat_number || undefined,
-      commercialRegister: data.commercial_registration || undefined,
-      email: data.email || undefined,
-      phone: data.phone || undefined,
-      buildingNumber: data.building_number || "",
-      streetName: data.street_name || "",
-      district: data.district || "",
-      city: data.city || "",
-      postalCode: data.postal_code || "",
-      country: data.country || "",
-      creditLimit: Number(data.credit_limit) || 0,
-      paymentTerms: data.payment_term || "net30",
-      balance: Number(data.current_balance) || 0,
-      isActive: data.is_active ?? true,
-      createdAt: data.created_at || new Date().toISOString(),
-    };
+    return mapRow(data as Record<string, unknown>);
   },
 
   async create(customer: Omit<Customer, "id" | "createdAt" | "balance">): Promise<Customer> {
-    // Get the auth user
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
+    const createdBy = await resolveCreatedBy();
 
-    if (!authUser) {
-      throw new Error("User not authenticated. Please log in again.");
-    }
-
-    // Check if this auth user has a matching record in the users table
-    // The customers.created_by FK references the users table, not auth.users
-    const { data: dbUser } = await supabase
-      .from("users")
-      .select("id")
-      .eq("id", authUser.id)
-      .maybeSingle();
-
-    // If no matching users row exists, insert the user first
-    if (!dbUser) {
-      console.warn("No users table record found for auth user. Attempting to create one.");
-      const { error: userInsertError } = await supabase.from("users").insert({
-        id: authUser.id,
-        username: authUser.email?.split("@")[0] || "user",
-        email: authUser.email || "",
-        full_name: authUser.user_metadata?.full_name || authUser.email || "User",
-        role: "admin",
-        permissions: [],
-        is_active: true,
-      });
-
-      if (userInsertError) {
-        console.error("Failed to create users record:", userInsertError);
-        // Continue without created_by to avoid blocking customer creation
-      }
-    }
-
-    // Re-check after potential insert
-    const { data: resolvedUser } = await supabase
-      .from("users")
-      .select("id")
-      .eq("id", authUser.id)
-      .maybeSingle();
-
-    const insertData = {
+    const insertData: Record<string, unknown> = {
       customer_code: customer.code,
       name_english: customer.nameEnglish,
       name_arabic: customer.nameArabic || null,
@@ -132,13 +113,15 @@ export const customerService = {
       postal_code: customer.postalCode || null,
       country: customer.country || "Saudi Arabia",
       credit_limit: customer.creditLimit ?? 0,
-      payment_term: customer.paymentTerms as "cash" | "net15" | "net30" | "net60" | "net90",
+      payment_term: customer.paymentTerms || "net30",
       is_active: customer.isActive ?? true,
-      // Only include created_by if we confirmed the user exists in the users table
-      created_by: resolvedUser ? authUser.id : null,
     };
 
-    console.log("Inserting customer data:", insertData);
+    if (createdBy) {
+      insertData.created_by = createdBy;
+    }
+
+    console.log("Inserting customer:", insertData);
 
     const { data, error } = await supabase
       .from("customers")
@@ -149,31 +132,11 @@ export const customerService = {
     console.log("Insert result:", { data, error });
 
     if (error) {
-      console.error("Supabase Error creating customer:", error);
+      console.error("Error creating customer:", error);
       throw new Error(error.message || "Failed to create customer");
     }
 
-    return {
-      id: data.id,
-      code: data.customer_code,
-      nameEnglish: data.name_english,
-      nameArabic: data.name_arabic || "",
-      vatNumber: data.vat_number || undefined,
-      commercialRegister: data.commercial_registration || undefined,
-      email: data.email || undefined,
-      phone: data.phone || undefined,
-      buildingNumber: data.building_number || "",
-      streetName: data.street_name || "",
-      district: data.district || "",
-      city: data.city,
-      postalCode: data.postal_code || "",
-      country: data.country || "Saudi Arabia",
-      creditLimit: Number(data.credit_limit) || 0,
-      paymentTerms: data.payment_term || "net30",
-      balance: Number(data.current_balance) || 0,
-      isActive: data.is_active ?? true,
-      createdAt: data.created_at,
-    };
+    return mapRow(data as Record<string, unknown>);
   },
 
   async update(
@@ -181,6 +144,7 @@ export const customerService = {
     updates: Partial<Omit<Customer, "id" | "createdAt" | "balance">>
   ): Promise<Customer> {
     const updateData: Record<string, unknown> = {};
+
     if (updates.code !== undefined) updateData.customer_code = updates.code;
     if (updates.nameArabic !== undefined) updateData.name_arabic = updates.nameArabic;
     if (updates.nameEnglish !== undefined) updateData.name_english = updates.nameEnglish;
@@ -195,8 +159,7 @@ export const customerService = {
     if (updates.postalCode !== undefined) updateData.postal_code = updates.postalCode;
     if (updates.country !== undefined) updateData.country = updates.country;
     if (updates.creditLimit !== undefined) updateData.credit_limit = updates.creditLimit;
-    if (updates.paymentTerms !== undefined)
-      updateData.payment_term = updates.paymentTerms as "cash" | "net15" | "net30" | "net60" | "net90";
+    if (updates.paymentTerms !== undefined) updateData.payment_term = updates.paymentTerms;
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
 
     const { data, error } = await supabase
@@ -207,39 +170,19 @@ export const customerService = {
       .single();
 
     if (error) {
-      console.error("Supabase Error updating customer:", error);
-      throw error;
+      console.error("Error updating customer:", error);
+      throw new Error(error.message);
     }
 
-    return {
-      id: data.id,
-      code: data.customer_code,
-      nameArabic: data.name_arabic || "",
-      nameEnglish: data.name_english,
-      vatNumber: data.vat_number || undefined,
-      commercialRegister: data.commercial_registration || undefined,
-      email: data.email || undefined,
-      phone: data.phone || undefined,
-      buildingNumber: data.building_number || "",
-      streetName: data.street_name || "",
-      district: data.district || "",
-      city: data.city || "",
-      postalCode: data.postal_code || "",
-      country: data.country || "",
-      creditLimit: Number(data.credit_limit) || 0,
-      paymentTerms: data.payment_term || "net30",
-      balance: Number(data.current_balance) || 0,
-      isActive: data.is_active ?? true,
-      createdAt: data.created_at || new Date().toISOString(),
-    };
+    return mapRow(data as Record<string, unknown>);
   },
 
   async delete(id: string): Promise<void> {
     const { error } = await supabase.from("customers").delete().eq("id", id);
 
     if (error) {
-      console.error("Supabase Error deleting customer:", error);
-      throw error;
+      console.error("Error deleting customer:", error);
+      throw new Error(error.message);
     }
   },
 };
