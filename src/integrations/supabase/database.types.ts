@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -129,15 +129,7 @@ export type Database = {
           updated_at?: string | null
           vat_number?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "customers_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       journal_entries: {
         Row: {
@@ -179,15 +171,7 @@ export type Database = {
           total_debit?: number
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "journal_entries_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       journal_entry_lines: {
         Row: {
@@ -435,13 +419,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "purchase_invoices_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "purchase_invoices_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
@@ -544,13 +521,6 @@ export type Database = {
           vat_amount?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "purchase_returns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "purchase_returns_original_invoice_id_fkey"
             columns: ["original_invoice_id"]
@@ -677,13 +647,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sales_invoices_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "sales_invoices_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -787,13 +750,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sales_returns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "sales_returns_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -879,15 +835,7 @@ export type Database = {
           updated_at?: string | null
           vat_number?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "suppliers_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       users: {
         Row: {
