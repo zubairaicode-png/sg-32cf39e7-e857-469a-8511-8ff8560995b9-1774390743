@@ -42,7 +42,12 @@ export default function NewCustomerPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log("=== FORM SUBMIT STARTED ===");
+    console.log("Form event:", e);
+    console.log("Current user:", user);
+    
     if (!user) {
+      console.error("ERROR: No user found!");
       toast({
         title: "Authentication Error",
         description: "You must be logged in to create customers.",
@@ -51,14 +56,14 @@ export default function NewCustomerPage() {
       return;
     }
 
+    console.log("User is authenticated, proceeding with save...");
     setIsLoading(true);
 
     try {
       console.log("=== CREATING CUSTOMER ===");
       console.log("Form data:", formData);
-      console.log("Current user:", user);
-
-      await customerService.create({
+      
+      const customerData = {
         code: formData.customerCode,
         nameEnglish: formData.nameEnglish,
         nameArabic: formData.nameArabic,
@@ -75,17 +80,27 @@ export default function NewCustomerPage() {
         creditLimit: parseFloat(formData.creditLimit) || 0,
         paymentTerms: formData.paymentTerms,
         isActive: formData.isActive,
-      });
+      };
+      
+      console.log("Calling customerService.create with:", customerData);
 
-      console.log("Customer created successfully!");
+      const result = await customerService.create(customerData);
+      
+      console.log("Customer created successfully! Result:", result);
 
       toast({
         title: "Customer Created",
         description: `${formData.nameEnglish} has been successfully added.`,
       });
+      
+      console.log("Redirecting to /customers...");
       router.push("/customers");
     } catch (error) {
-      console.error("Error creating customer:", error);
+      console.error("=== ERROR CREATING CUSTOMER ===");
+      console.error("Error object:", error);
+      console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
+      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+      
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to create customer. Please try again.",
@@ -93,6 +108,7 @@ export default function NewCustomerPage() {
       });
     } finally {
       setIsLoading(false);
+      console.log("=== FORM SUBMIT COMPLETED ===");
     }
   };
 
@@ -137,13 +153,12 @@ export default function NewCustomerPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="vatNumber">VAT Number *</Label>
+                    <Label htmlFor="vatNumber">VAT Number</Label>
                     <Input
                       id="vatNumber"
                       placeholder="300075588900003"
                       value={formData.vatNumber}
                       onChange={(e) => handleChange("vatNumber", e.target.value)}
-                      required
                     />
                   </div>
                 </div>
@@ -173,13 +188,12 @@ export default function NewCustomerPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="crNumber">CR Number *</Label>
+                  <Label htmlFor="crNumber">CR Number</Label>
                   <Input
                     id="crNumber"
                     placeholder="1010123456"
                     value={formData.crNumber}
                     onChange={(e) => handleChange("crNumber", e.target.value)}
-                    required
                   />
                 </div>
               </CardContent>
@@ -193,57 +207,52 @@ export default function NewCustomerPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="buildingNumber">Building Number *</Label>
+                    <Label htmlFor="buildingNumber">Building Number</Label>
                     <Input
                       id="buildingNumber"
                       placeholder="1234"
                       value={formData.buildingNumber}
                       onChange={(e) => handleChange("buildingNumber", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="additionalNumber">Additional Number *</Label>
+                    <Label htmlFor="additionalNumber">Additional Number</Label>
                     <Input
                       id="additionalNumber"
                       placeholder="5678"
                       value={formData.additionalNumber}
                       onChange={(e) => handleChange("additionalNumber", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="postalCode">Postal Code *</Label>
+                    <Label htmlFor="postalCode">Postal Code</Label>
                     <Input
                       id="postalCode"
                       placeholder="12345"
                       value={formData.postalCode}
                       onChange={(e) => handleChange("postalCode", e.target.value)}
-                      required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="streetName">Street Name *</Label>
+                  <Label htmlFor="streetName">Street Name</Label>
                   <Input
                     id="streetName"
                     placeholder="King Fahd Road"
                     value={formData.streetName}
                     onChange={(e) => handleChange("streetName", e.target.value)}
-                    required
                   />
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="district">District *</Label>
+                    <Label htmlFor="district">District</Label>
                     <Input
                       id="district"
                       placeholder="Al Olaya"
                       value={formData.district}
                       onChange={(e) => handleChange("district", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
@@ -276,36 +285,33 @@ export default function NewCustomerPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       type="email"
                       placeholder="info@company.sa"
                       value={formData.email}
                       onChange={(e) => handleChange("email", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone *</Label>
+                    <Label htmlFor="phone">Phone</Label>
                     <Input
                       id="phone"
                       placeholder="+966501234567"
                       value={formData.phone}
                       onChange={(e) => handleChange("phone", e.target.value)}
-                      required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contactPerson">Contact Person *</Label>
+                  <Label htmlFor="contactPerson">Contact Person</Label>
                   <Input
                     id="contactPerson"
                     placeholder="Ahmed Mohammed"
                     value={formData.contactPerson}
                     onChange={(e) => handleChange("contactPerson", e.target.value)}
-                    required
                   />
                 </div>
               </CardContent>
@@ -319,14 +325,13 @@ export default function NewCustomerPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="creditLimit">Credit Limit (SAR) *</Label>
+                    <Label htmlFor="creditLimit">Credit Limit (SAR)</Label>
                     <Input
                       id="creditLimit"
                       type="number"
-                      placeholder="100000"
+                      placeholder="0"
                       value={formData.creditLimit}
                       onChange={(e) => handleChange("creditLimit", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
