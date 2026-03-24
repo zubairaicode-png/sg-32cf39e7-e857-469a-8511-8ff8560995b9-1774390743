@@ -78,8 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           username: userData.username,
           email: userData.email,
           fullName: userData.full_name,
-          role: userData.role,
-          permissions: userData.permissions || [],
+          role: userData.role as User["role"],
+          permissions: (userData.permissions || []) as Permission[],
           isActive: userData.is_active,
           createdAt: userData.created_at,
         });
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               username: username,
               email: demoUser.email,
               full_name: demoUser.fullName,
-              role: demoUser.role,
+              role: demoUser.role as any,
               permissions: demoUser.permissions,
               is_active: true,
             });
@@ -145,8 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             username: username,
             email: demoUser.email,
             fullName: demoUser.fullName,
-            role: demoUser.role,
-            permissions: demoUser.permissions,
+            role: demoUser.role as User["role"],
+            permissions: demoUser.permissions as Permission[],
             isActive: true,
             createdAt: new Date().toISOString(),
           };
